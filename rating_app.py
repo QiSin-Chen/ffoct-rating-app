@@ -337,12 +337,54 @@ def inject_css():
            Radio：強制白底、黑字、灰框，避免 dark mode 變黑圈
         ========================================================= */
 
-        div[role="radiogroup"] {
-            margin-top: 0.45rem !important;
-            margin-bottom: 0.35rem !important;
-            color: #111111 !important;
-            background-color: #ffffff !important;
-        }
+        /* radio 整組往下，避免卡到題目框 */
+div[role="radiogroup"] {
+    margin-top: 0.45rem !important;
+    margin-bottom: 0.35rem !important;
+    color: #111111 !important;
+    background-color: #ffffff !important;
+}
+
+/* radio 每個選項的點擊範圍變大 */
+label[data-baseweb="radio"] {
+    margin-right: 1.05rem !important;
+    padding: 8px 4px !important;
+    font-size: 1.28rem !important;
+    cursor: pointer !important;
+    color: #111111 !important;
+    background-color: #ffffff !important;
+}
+
+/* radio 數字固定黑色 */
+label[data-baseweb="radio"] p,
+label[data-baseweb="radio"] span {
+    font-size: 1.28rem !important;
+    margin-left: 0.20rem !important;
+    color: #111111 !important;
+    background-color: #ffffff !important;
+}
+
+/* radio 外圈：強制黑框 */
+label[data-baseweb="radio"] > div:first-child {
+    transform: scale(1.55);
+    margin-right: 0.45rem !important;
+    background-color: #ffffff !important;
+    border: 1.5px solid #111111 !important;
+    box-shadow: 0 0 0 2px #111111 inset !important;
+}
+
+/* radio 內部圓點：選到時顯示藍色 */
+label[data-baseweb="radio"] > div:first-child div {
+    background-color: #1f77b4 !important;
+}
+
+/* radio svg / path 顏色 */
+label[data-baseweb="radio"] svg,
+label[data-baseweb="radio"] path {
+    color: #1f77b4 !important;
+    fill: #1f77b4 !important;
+    stroke: #1f77b4 !important;
+}
 
         label[data-baseweb="radio"] {
             margin-right: 1.05rem !important;
