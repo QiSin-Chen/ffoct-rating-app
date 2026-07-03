@@ -194,10 +194,23 @@ def inject_css():
     st.markdown(
         """
         <style>
-        /* 強制整個 app 使用淺色背景與深色文字，避免 dark mode 造成白字看不到 */
-        html, body, .stApp, [data-testid="stAppViewContainer"] {
+        /* =========================================================
+           Force light theme
+           避免使用者系統 / 瀏覽器 / Streamlit dark mode 影響顯示
+        ========================================================= */
+
+        html, body,
+        .stApp,
+        [data-testid="stAppViewContainer"],
+        [data-testid="stHeader"],
+        [data-testid="stToolbar"],
+        [data-testid="stDecoration"] {
             background-color: #ffffff !important;
             color: #111111 !important;
+        }
+
+        [data-testid="stHeader"] {
+            background: #ffffff !important;
         }
 
         /* 整體版面 */
@@ -217,8 +230,10 @@ def inject_css():
 
         /* 全域文字固定深色 */
         h1, h2, h3, h4, h5, h6,
-        p, label, span, div,
-        [data-testid="stMarkdownContainer"] {
+        p, label, span,
+        [data-testid="stMarkdownContainer"],
+        [data-testid="stText"],
+        [data-testid="stCaptionContainer"] {
             color: #111111 !important;
         }
 
@@ -259,7 +274,38 @@ def inject_css():
             color: #111111 !important;
         }
 
-        /* 評分卡片：固定黑字，避免別人 dark mode 變白字 */
+        /* =========================================================
+           Selectbox：強制白底黑字
+        ========================================================= */
+
+        div[data-baseweb="select"] > div,
+        div[data-baseweb="select"] div,
+        div[data-baseweb="select"] span {
+            background-color: #ffffff !important;
+            color: #111111 !important;
+            border-color: #cccccc !important;
+        }
+
+        div[data-baseweb="popover"] {
+            background-color: #ffffff !important;
+            color: #111111 !important;
+        }
+
+        ul[role="listbox"],
+        li[role="option"] {
+            background-color: #ffffff !important;
+            color: #111111 !important;
+        }
+
+        li[role="option"]:hover {
+            background-color: #f2f2f2 !important;
+            color: #111111 !important;
+        }
+
+        /* =========================================================
+           評分說明框：固定白底黑字
+        ========================================================= */
+
         .score-box {
             background-color: #f7f7f7 !important;
             color: #111111 !important;
@@ -273,43 +319,65 @@ def inject_css():
             margin-bottom: 8px;
         }
 
+        .score-box,
         .score-box b,
-        .score-box br,
         .score-box span,
         .score-box div,
         .score-box p,
         .score-box * {
             color: #111111 !important;
+            background-color: transparent !important;
         }
 
-        /* radio 整組往下，避免卡到題目框 */
+        .score-box {
+            background-color: #f7f7f7 !important;
+        }
+
+        /* =========================================================
+           Radio：強制白底、黑字、灰框，避免 dark mode 變黑圈
+        ========================================================= */
+
         div[role="radiogroup"] {
             margin-top: 0.45rem !important;
             margin-bottom: 0.35rem !important;
             color: #111111 !important;
+            background-color: #ffffff !important;
         }
 
-        /* radio 每個選項的點擊範圍變大 */
         label[data-baseweb="radio"] {
             margin-right: 1.05rem !important;
             padding: 8px 4px !important;
             font-size: 1.28rem !important;
             cursor: pointer !important;
             color: #111111 !important;
+            background-color: #ffffff !important;
         }
 
-        /* radio 圓圈本體放大 */
-        label[data-baseweb="radio"] > div:first-child {
-            transform: scale(1.60);
-            margin-right: 0.45rem !important;
-        }
-
-        /* radio 數字放大且固定黑色 */
-        label[data-baseweb="radio"] p {
+        label[data-baseweb="radio"] p,
+        label[data-baseweb="radio"] span {
             font-size: 1.28rem !important;
             margin-left: 0.20rem !important;
             color: #111111 !important;
+            background-color: #ffffff !important;
         }
+
+        /* radio 圓圈本體放大，並固定未選取樣式 */
+        label[data-baseweb="radio"] > div:first-child {
+            transform: scale(1.55);
+            margin-right: 0.45rem !important;
+            background-color: #ffffff !important;
+            border-color: #777777 !important;
+        }
+
+        /* radio 內部 SVG / path 顏色保留可見 */
+        label[data-baseweb="radio"] svg {
+            color: #1f77b4 !important;
+            fill: #1f77b4 !important;
+        }
+
+        /* =========================================================
+           Button：強制白底黑字
+        ========================================================= */
 
         .stButton > button {
             width: 100%;
@@ -317,6 +385,22 @@ def inject_css():
             font-size: 1.08rem;
             font-weight: 700;
             border-radius: 8px;
+            background-color: #ffffff !important;
+            color: #111111 !important;
+            border: 1px solid #cccccc !important;
+        }
+
+        .stButton > button:hover {
+            background-color: #f2f2f2 !important;
+            color: #111111 !important;
+            border: 1px solid #999999 !important;
+        }
+
+        .stButton > button:active,
+        .stButton > button:focus {
+            background-color: #eaeaea !important;
+            color: #111111 !important;
+            border: 1px solid #777777 !important;
         }
 
         [data-testid="stCaptionContainer"] {
