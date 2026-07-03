@@ -194,6 +194,12 @@ def inject_css():
     st.markdown(
         """
         <style>
+        /* 強制整個 app 使用淺色背景與深色文字，避免 dark mode 造成白字看不到 */
+        html, body, .stApp, [data-testid="stAppViewContainer"] {
+            background-color: #ffffff !important;
+            color: #111111 !important;
+        }
+
         /* 整體版面 */
         .block-container {
             padding-top: 2.4rem !important;
@@ -201,10 +207,19 @@ def inject_css():
             padding-left: 1.1rem !important;
             padding-right: 1.1rem !important;
             max-width: 100% !important;
+            background-color: #ffffff !important;
+            color: #111111 !important;
         }
 
         section[data-testid="stSidebar"] {
             display: none !important;
+        }
+
+        /* 全域文字固定深色 */
+        h1, h2, h3, h4, h5, h6,
+        p, label, span, div,
+        [data-testid="stMarkdownContainer"] {
+            color: #111111 !important;
         }
 
         h1 {
@@ -241,11 +256,13 @@ def inject_css():
             font-size: 1.00rem;
             margin-bottom: 0.15rem;
             font-weight: 600;
+            color: #111111 !important;
         }
 
-        /* 評分卡片 */
+        /* 評分卡片：固定黑字，避免別人 dark mode 變白字 */
         .score-box {
-            background-color: #f7f7f7;
+            background-color: #f7f7f7 !important;
+            color: #111111 !important;
             padding: 12px 15px;
             border-radius: 8px;
             border: 1px solid #d8d8d8;
@@ -256,10 +273,20 @@ def inject_css():
             margin-bottom: 8px;
         }
 
+        .score-box b,
+        .score-box br,
+        .score-box span,
+        .score-box div,
+        .score-box p,
+        .score-box * {
+            color: #111111 !important;
+        }
+
         /* radio 整組往下，避免卡到題目框 */
         div[role="radiogroup"] {
             margin-top: 0.45rem !important;
             margin-bottom: 0.35rem !important;
+            color: #111111 !important;
         }
 
         /* radio 每個選項的點擊範圍變大 */
@@ -268,6 +295,7 @@ def inject_css():
             padding: 8px 4px !important;
             font-size: 1.28rem !important;
             cursor: pointer !important;
+            color: #111111 !important;
         }
 
         /* radio 圓圈本體放大 */
@@ -276,10 +304,11 @@ def inject_css():
             margin-right: 0.45rem !important;
         }
 
-        /* radio 數字放大 */
+        /* radio 數字放大且固定黑色 */
         label[data-baseweb="radio"] p {
             font-size: 1.28rem !important;
             margin-left: 0.20rem !important;
+            color: #111111 !important;
         }
 
         .stButton > button {
@@ -293,6 +322,7 @@ def inject_css():
         [data-testid="stCaptionContainer"] {
             font-size: 0.85rem !important;
             margin-bottom: 0.35rem !important;
+            color: #6b7280 !important;
         }
 
         hr {
