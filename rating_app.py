@@ -9,7 +9,6 @@ from supabase import create_client
 # =========================
 # 檔案設定
 # =========================
-# 遠端部署版一定要用相對路徑，不能用 G:\...
 MANIFEST_CSV = r"rating_dataset/manifest.csv"
 
 
@@ -196,7 +195,6 @@ def inject_css():
         <style>
         /* =========================================================
            Force light theme
-           避免使用者系統 / 瀏覽器 / Streamlit dark mode 影響顯示
         ========================================================= */
 
         html, body,
@@ -213,7 +211,6 @@ def inject_css():
             background: #ffffff !important;
         }
 
-        /* 整體版面 */
         .block-container {
             padding-top: 2.4rem !important;
             padding-bottom: 0.4rem !important;
@@ -228,7 +225,6 @@ def inject_css():
             display: none !important;
         }
 
-        /* 全域文字固定深色 */
         h1, h2, h3, h4, h5, h6,
         p, label, span,
         [data-testid="stMarkdownContainer"],
@@ -275,7 +271,7 @@ def inject_css():
         }
 
         /* =========================================================
-           Selectbox：強制白底黑字
+           Selectbox：白底黑字
         ========================================================= */
 
         div[data-baseweb="select"] > div,
@@ -334,57 +330,17 @@ def inject_css():
         }
 
         /* =========================================================
-           Radio：強制白底、黑字、灰框，避免 dark mode 變黑圈
+           Radio：
+           未選：白底 + 細黑框
+           已選：白底 + 細黑框 + 中間黑色圓點
         ========================================================= */
 
-        /* radio 整組往下，避免卡到題目框 */
-div[role="radiogroup"] {
-    margin-top: 0.45rem !important;
-    margin-bottom: 0.35rem !important;
-    color: #111111 !important;
-    background-color: #ffffff !important;
-}
-
-/* radio 每個選項的點擊範圍變大 */
-label[data-baseweb="radio"] {
-    margin-right: 1.05rem !important;
-    padding: 8px 4px !important;
-    font-size: 1.28rem !important;
-    cursor: pointer !important;
-    color: #111111 !important;
-    background-color: #ffffff !important;
-}
-
-/* radio 數字固定黑色 */
-label[data-baseweb="radio"] p,
-label[data-baseweb="radio"] span {
-    font-size: 1.28rem !important;
-    margin-left: 0.20rem !important;
-    color: #111111 !important;
-    background-color: #ffffff !important;
-}
-
-/* radio 外圈：強制黑框 */
-label[data-baseweb="radio"] > div:first-child {
-    transform: scale(1.55);
-    margin-right: 0.45rem !important;
-    background-color: #ffffff !important;
-    border: 1.5px solid #111111 !important;
-    box-shadow: 0 0 0 2px #111111 inset !important;
-}
-
-/* radio 內部圓點：選到時顯示藍色 */
-label[data-baseweb="radio"] > div:first-child div {
-    background-color: #1f77b4 !important;
-}
-
-/* radio svg / path 顏色 */
-label[data-baseweb="radio"] svg,
-label[data-baseweb="radio"] path {
-    color: #1f77b4 !important;
-    fill: #1f77b4 !important;
-    stroke: #1f77b4 !important;
-}
+        div[role="radiogroup"] {
+            margin-top: 0.45rem !important;
+            margin-bottom: 0.35rem !important;
+            color: #111111 !important;
+            background-color: #ffffff !important;
+        }
 
         label[data-baseweb="radio"] {
             margin-right: 1.05rem !important;
@@ -393,6 +349,7 @@ label[data-baseweb="radio"] path {
             cursor: pointer !important;
             color: #111111 !important;
             background-color: #ffffff !important;
+            position: relative !important;
         }
 
         label[data-baseweb="radio"] p,
@@ -403,22 +360,50 @@ label[data-baseweb="radio"] path {
             background-color: #ffffff !important;
         }
 
-        /* radio 圓圈本體放大，並固定未選取樣式 */
-        label[data-baseweb="radio"] > div:first-child {
-            transform: scale(1.55);
-            margin-right: 0.45rem !important;
-            background-color: #ffffff !important;
-            border-color: #777777 !important;
+        /* 隱藏 Streamlit / BaseWeb 預設的 radio 圖形，避免變成藍色或黑色實心圓 */
+        label[data-baseweb="radio"] > div:first-child,
+        label[data-baseweb="radio"] svg,
+        label[data-baseweb="radio"] path {
+            display: none !important;
         }
 
-        /* radio 內部 SVG / path 顏色保留可見 */
-        label[data-baseweb="radio"] svg {
-            color: #1f77b4 !important;
-            fill: #1f77b4 !important;
+        /* 自訂 radio 外圈：白底細黑框 */
+        label[data-baseweb="radio"]::before {
+            content: "";
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 1.4px solid #111111;
+            border-radius: 50%;
+            background-color: #ffffff;
+            margin-right: 0.55rem;
+            vertical-align: -3px;
+            box-sizing: border-box;
+        }
+
+        /* 自訂 radio 內圈：預設不顯示 */
+        label[data-baseweb="radio"]::after {
+            content: "";
+            position: absolute;
+            left: 11px;
+            top: 50%;
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background-color: #111111;
+            transform: translateY(-50%);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* 被選取時：中間黑點顯示 */
+        label[data-baseweb="radio"]:has(input:checked)::after,
+        label[data-baseweb="radio"]:has([aria-checked="true"])::after {
+            opacity: 1;
         }
 
         /* =========================================================
-           Button：強制白底黑字
+           Button：白底黑字
         ========================================================= */
 
         .stButton > button {
@@ -456,7 +441,6 @@ label[data-baseweb="radio"] path {
             margin-bottom: 0.25rem !important;
         }
 
-        /* 壓縮四個評分卡之間的縱向距離，但保留 radio 空間 */
         div[data-testid="stVerticalBlock"] {
             gap: 0.28rem !important;
         }
@@ -477,7 +461,6 @@ def score_card(title, definition_key, radio_key):
     st.markdown(f"#### {title}")
     show_score_definition(SCORE_DEFINITIONS[definition_key])
 
-    # 讓 1–5 分圓圈往下，不要卡到上方定義框
     st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
 
     score = st.radio(
@@ -505,17 +488,11 @@ def main():
 
     df = load_manifest()
 
-    # =========================
-    # Session state：評分者
-    # =========================
     if "expert_id" not in st.session_state:
         st.session_state.expert_id = "expert_1"
 
     expert_options = ["expert_1", "expert_2", "expert_3"]
 
-    # =========================
-    # 讀取目前 expert 的進度
-    # =========================
     result_df = load_existing_result(st.session_state.expert_id)
     rated_ids = set(result_df["image_id"].tolist())
 
@@ -533,9 +510,6 @@ def main():
     image_id = current_row["image_id"]
     image_path = current_row["image_path"]
 
-    # =========================
-    # 上方：標題 + 評分者設定 + 右上儲存按鈕
-    # =========================
     st.title("FFOCT 影像主觀評分系統")
 
     st.markdown(
@@ -555,7 +529,6 @@ def main():
         st.session_state.expert_id = selected_expert
         st.rerun()
 
-    # 重新讀取切換後的 expert 進度
     result_df = load_existing_result(st.session_state.expert_id)
     rated_ids = set(result_df["image_id"].tolist())
     rated_count = len(rated_ids)
@@ -574,9 +547,6 @@ def main():
         st.markdown("<br>", unsafe_allow_html=True)
         submit = st.button("儲存並前往下一張")
 
-    # =========================
-    # 主畫面：左邊影像，右邊 2×2 評分項目
-    # =========================
     left_col, right_col = st.columns([1.00, 3.10])
 
     with left_col:
@@ -584,10 +554,7 @@ def main():
             img = Image.open(image_path)
 
             st.caption(f"原始尺寸：{img.width} × {img.height}")
-
-            # 讓圖片往下一點，避免卡到原始尺寸文字
             st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
-
             st.image(img, caption=image_id, width=420)
 
         else:
@@ -629,9 +596,6 @@ def main():
                 f"{image_id}_artifact"
             )
 
-    # =========================
-    # 儲存邏輯
-    # =========================
     if submit:
         if (
             overall_score is None or
@@ -645,13 +609,10 @@ def main():
         row_data = {
             "expert_id": st.session_state.expert_id,
             "image_id": current_row["image_id"],
-
-            # 後台答案，專家畫面不顯示
             "region": current_row["region"],
             "case_id": current_row["case_id"],
             "case_number": current_row["case_number"],
             "method": current_row["method"],
-
             "overall_score": overall_score,
             "layer_score": layer_score,
             "nucleus_score": nucleus_score,
