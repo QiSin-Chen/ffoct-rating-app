@@ -344,51 +344,57 @@ def inject_css():
 
         label[data-baseweb="radio"] {
             margin-right: 1.05rem !important;
-            padding: 8px 4px !important;
+            padding: 8px 4px 8px 34px !important;
             font-size: 1.28rem !important;
             cursor: pointer !important;
             color: #111111 !important;
             background-color: #ffffff !important;
             position: relative !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            min-height: 34px !important;
+            line-height: 1 !important;
         }
 
         label[data-baseweb="radio"] p,
         label[data-baseweb="radio"] span {
             font-size: 1.28rem !important;
-            margin-left: 0.20rem !important;
+            margin-left: 0rem !important;
             color: #111111 !important;
             background-color: #ffffff !important;
+            line-height: 1 !important;
         }
 
-        /* 隱藏 Streamlit / BaseWeb 預設的 radio 圖形，避免變成藍色或黑色實心圓 */
+        /* 隱藏 Streamlit / BaseWeb 預設的 radio 圖形 */
         label[data-baseweb="radio"] > div:first-child,
         label[data-baseweb="radio"] svg,
         label[data-baseweb="radio"] path {
             display: none !important;
         }
 
-        /* 自訂 radio 外圈：白底細黑框 */
+        /* 自訂 radio 外圈：與數字同高、白底細黑框 */
         label[data-baseweb="radio"]::before {
             content: "";
-            display: inline-block;
+            position: absolute;
+            left: 4px;
+            top: 50%;
             width: 18px;
             height: 18px;
             border: 1.4px solid #111111;
             border-radius: 50%;
             background-color: #ffffff;
-            margin-right: 0.55rem;
-            vertical-align: -3px;
+            transform: translateY(-50%);
             box-sizing: border-box;
         }
 
-        /* 自訂 radio 內圈：預設不顯示 */
+        /* 自訂 radio 內圈：與外圈共用同一中心點 */
         label[data-baseweb="radio"]::after {
             content: "";
             position: absolute;
-            left: 11px;
+            left: 9px;
             top: 50%;
-            width: 9px;
-            height: 9px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             background-color: #111111;
             transform: translateY(-50%);
