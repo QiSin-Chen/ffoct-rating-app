@@ -131,10 +131,6 @@ def get_empty_result_df():
 
 
 def load_existing_result(expert_id):
-    """
-    從 Supabase 讀取指定 expert 已評過的資料。
-    用來判斷哪些 image_id 要跳過。
-    """
     supabase = get_supabase_client()
 
     try:
@@ -180,10 +176,6 @@ def load_existing_result(expert_id):
 
 
 def save_rating(row_data, expert_id):
-    """
-    將評分結果寫入 Supabase。
-    使用 upsert，確保同一位 expert 對同一張 image_id 只保留一筆資料。
-    """
     supabase = get_supabase_client()
 
     payload = {
@@ -232,8 +224,8 @@ def inject_css():
         }
 
         .block-container {
-            padding-top: 1.8rem !important;
-            padding-bottom: 0.4rem !important;
+            padding-top: 2.8rem !important;
+            padding-bottom: 0.8rem !important;
             padding-left: 1.2rem !important;
             padding-right: 1.2rem !important;
             max-width: 100% !important;
@@ -254,38 +246,43 @@ def inject_css():
         }
 
         h1 {
-            font-size: clamp(1.45rem, 2vw, 1.85rem) !important;
-            margin-top: 0rem !important;
-            margin-bottom: 0.22rem !important;
+            font-size: clamp(1.55rem, 2vw, 1.95rem) !important;
+            margin-top: 0.4rem !important;
+            margin-bottom: 0.35rem !important;
+            line-height: 1.25 !important;
         }
 
         h2 {
-            font-size: clamp(1.20rem, 1.7vw, 1.45rem) !important;
-            margin-top: 0.10rem !important;
-            margin-bottom: 0.10rem !important;
+            font-size: clamp(1.22rem, 1.7vw, 1.45rem) !important;
+            margin-top: 0.25rem !important;
+            margin-bottom: 0.20rem !important;
+            line-height: 1.25 !important;
         }
 
         h3 {
-            font-size: clamp(1.05rem, 1.4vw, 1.25rem) !important;
-            margin-top: 0.10rem !important;
-            margin-bottom: 0.16rem !important;
+            font-size: clamp(1.10rem, 1.4vw, 1.28rem) !important;
+            margin-top: 0.20rem !important;
+            margin-bottom: 0.20rem !important;
+            line-height: 1.25 !important;
         }
 
         h4 {
-            font-size: clamp(1.00rem, 1.25vw, 1.18rem) !important;
-            margin-top: 0.06rem !important;
-            margin-bottom: 0.14rem !important;
+            font-size: clamp(1.02rem, 1.25vw, 1.20rem) !important;
+            margin-top: 0.10rem !important;
+            margin-bottom: 0.18rem !important;
+            line-height: 1.25 !important;
         }
 
         p {
             margin-top: 0rem !important;
-            margin-bottom: 0.12rem !important;
-            font-size: clamp(0.90rem, 1.1vw, 1.02rem) !important;
+            margin-bottom: 0.18rem !important;
+            font-size: clamp(0.92rem, 1.1vw, 1.04rem) !important;
+            line-height: 1.45 !important;
         }
 
         .top-info {
             font-size: clamp(0.90rem, 1.1vw, 1.00rem);
-            margin-bottom: 0.15rem;
+            margin-bottom: 0.10rem;
             font-weight: 600;
             color: #111111 !important;
         }
@@ -314,22 +311,6 @@ def inject_css():
             color: #111111 !important;
         }
 
-        .reference-card {
-            border: 1px solid #dddddd;
-            border-radius: 10px;
-            padding: 10px;
-            background-color: #fafafa;
-            margin-bottom: 12px;
-        }
-
-        .reference-caption {
-            text-align: center;
-            font-size: clamp(0.90rem, 1vw, 1.05rem);
-            font-weight: 600;
-            color: #111111 !important;
-            margin-top: 6px;
-        }
-
         .region-badge {
             display: inline-block;
             padding: 3px 8px;
@@ -339,73 +320,73 @@ def inject_css():
             font-size: clamp(0.85rem, 1vw, 0.98rem);
             font-weight: 600;
             color: #111111 !important;
-            margin-bottom: 6px;
+            margin-top: 0rem !important;
+            margin-bottom: 4px !important;
         }
 
-        .score-card {
-            background-color: #f7f7f7 !important;
+        .reference-caption {
+            text-align: center;
+            font-size: clamp(0.88rem, 1vw, 1.02rem);
+            font-weight: 600;
             color: #111111 !important;
-            padding: 12px 14px;
-            border-radius: 8px;
-            border: 1px solid #d8d8d8;
-            font-size: clamp(0.95rem, 1.05vw, 1.08rem);
-            line-height: 1.45;
-            margin-bottom: 12px;
-            min-height: 250px;
-        }
-
-        .score-card,
-        .score-card b,
-        .score-card span,
-        .score-card div,
-        .score-card p,
-        .score-card * {
-            color: #111111 !important;
+            margin-top: 4px;
+            margin-bottom: 10px;
         }
 
         .score-subtitle {
             font-weight: 700;
-            margin-bottom: 8px;
-            font-size: clamp(0.95rem, 1.10vw, 1.10rem);
+            margin-top: 0rem;
+            margin-bottom: 0.55rem;
+            font-size: clamp(1.00rem, 1.10vw, 1.12rem);
         }
 
-        /* 垂直 radio：每個選項直接接在 1–5 說明旁邊 */
-        .score-card div[role="radiogroup"] {
+        /* 讓 Streamlit 原生 border container 內容更緊湊 */
+        [data-testid="stVerticalBlockBorderWrapper"] {
+            background-color: #f7f7f7 !important;
+            border: 1px solid #d8d8d8 !important;
+            border-radius: 8px !important;
+        }
+
+        [data-testid="stVerticalBlockBorderWrapper"] * {
+            color: #111111 !important;
+        }
+
+        /* 垂直 radio：每個選項直接放在框框裡 */
+        [data-testid="stVerticalBlockBorderWrapper"] div[role="radiogroup"] {
             margin-top: 0rem !important;
             margin-bottom: 0rem !important;
             background-color: #f7f7f7 !important;
         }
 
-        .score-card label[data-baseweb="radio"] {
+        [data-testid="stVerticalBlockBorderWrapper"] label[data-baseweb="radio"] {
             display: flex !important;
             align-items: center !important;
-            min-height: 34px !important;
-            margin-top: 4px !important;
-            margin-bottom: 4px !important;
-            padding: 3px 4px !important;
+            min-height: 32px !important;
+            margin-top: 2px !important;
+            margin-bottom: 2px !important;
+            padding: 2px 4px !important;
             cursor: pointer !important;
             color: #111111 !important;
             background-color: #f7f7f7 !important;
         }
 
-        .score-card label[data-baseweb="radio"] p,
-        .score-card label[data-baseweb="radio"] span {
-            font-size: clamp(0.95rem, 1.08vw, 1.08rem) !important;
+        [data-testid="stVerticalBlockBorderWrapper"] label[data-baseweb="radio"] p,
+        [data-testid="stVerticalBlockBorderWrapper"] label[data-baseweb="radio"] span {
+            font-size: clamp(0.96rem, 1.08vw, 1.08rem) !important;
             color: #111111 !important;
             line-height: 1.35 !important;
         }
 
-        /* radio 原生外圈：固定白底黑框 */
-        .score-card label[data-baseweb="radio"] > div:first-child {
-            transform: scale(1.15);
+        [data-testid="stVerticalBlockBorderWrapper"] label[data-baseweb="radio"] > div:first-child {
+            transform: scale(1.10);
             margin-right: 0.65rem !important;
             background-color: #ffffff !important;
-            border: 1.2px solid #111111 !important;
+            border: 1.1px solid #111111 !important;
             box-shadow: none !important;
         }
 
-        .score-card label[data-baseweb="radio"] svg,
-        .score-card label[data-baseweb="radio"] path {
+        [data-testid="stVerticalBlockBorderWrapper"] label[data-baseweb="radio"] svg,
+        [data-testid="stVerticalBlockBorderWrapper"] label[data-baseweb="radio"] path {
             color: #111111 !important;
             fill: #111111 !important;
             stroke: #111111 !important;
@@ -437,23 +418,20 @@ def inject_css():
 
         [data-testid="stCaptionContainer"] {
             font-size: clamp(0.78rem, 0.95vw, 0.90rem) !important;
-            margin-bottom: 0.35rem !important;
+            margin-bottom: 0.25rem !important;
             color: #6b7280 !important;
         }
 
         div[data-testid="stVerticalBlock"] {
-            gap: 0.35rem !important;
+            gap: 0.28rem !important;
         }
 
-        /* 小螢幕時自動放寬間距，讓內容比較不擠 */
+        /* 小螢幕時自動放寬間距 */
         @media (max-width: 900px) {
             .block-container {
+                padding-top: 2.4rem !important;
                 padding-left: 0.7rem !important;
                 padding-right: 0.7rem !important;
-            }
-
-            .score-card {
-                min-height: auto;
             }
         }
         </style>
@@ -466,10 +444,6 @@ def inject_css():
 # 圖片顯示工具
 # =========================
 def show_image_responsive(img, caption=None):
-    """
-    讓不同版本 Streamlit 都可顯示滿版圖片。
-    新版用 use_container_width；舊版 fallback 到 use_column_width。
-    """
     try:
         st.image(img, caption=caption, use_container_width=True)
     except TypeError:
@@ -480,10 +454,6 @@ def show_image_responsive(img, caption=None):
 # 第一頁：真實 FFOCT 參考影像
 # =========================
 def get_reference_ffoct_images(df, n_total=9):
-    """
-    從 manifest 中挑選真實 FFOCT 影像作為參考。
-    優先平均取 face 與 hand/handback，不足再由其他 FFOCT 補滿。
-    """
     ref_df = df[df["method"].astype(str).str.upper() == "FFOCT"].copy()
 
     if len(ref_df) == 0:
@@ -525,10 +495,10 @@ def show_intro_page(df):
 
     st.markdown(
         """
-        ### 評分前參考：真實 FFOCT 影像範例
+### 評分前參考：真實 FFOCT 影像範例
 
-        以下影像為真實 FFOCT 影像，請先觀察其整體外觀、皮膚層狀結構、細胞核樣微結構與影像自然程度。  
-        看完後請按下方按鈕開始正式評分。
+以下影像為真實 FFOCT 影像，請先觀察其整體外觀、皮膚層狀結構、細胞核樣微結構與影像自然程度。  
+看完後請按下方按鈕開始正式評分。
         """
     )
 
@@ -549,7 +519,6 @@ def show_intro_page(df):
                 image_path = row["image_path"]
                 region_label = get_region_label(row["region"])
 
-                st.markdown("<div class='reference-card'>", unsafe_allow_html=True)
                 st.markdown(
                     f"<div class='region-badge'>部位：{region_label}</div>",
                     unsafe_allow_html=True
@@ -565,7 +534,6 @@ def show_intro_page(df):
                     "<div class='reference-caption'>真實 FFOCT 參考影像</div>",
                     unsafe_allow_html=True
                 )
-                st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("---")
 
@@ -585,8 +553,7 @@ def score_card(item_key, radio_key):
 
     st.markdown(f"#### {item['title']}")
 
-    with st.container():
-        st.markdown("<div class='score-card'>", unsafe_allow_html=True)
+    with st.container(border=True):
         st.markdown(
             f"<div class='score-subtitle'>{item['subtitle']}</div>",
             unsafe_allow_html=True
@@ -600,8 +567,6 @@ def score_card(item_key, radio_key):
             key=radio_key,
             label_visibility="collapsed"
         )
-
-        st.markdown("</div>", unsafe_allow_html=True)
 
     return score
 
@@ -697,7 +662,7 @@ def main():
                 unsafe_allow_html=True
             )
             st.caption(f"原始尺寸：{img.width} × {img.height}")
-            st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
+            st.markdown("<div style='height: 4px;'></div>", unsafe_allow_html=True)
 
             show_image_responsive(img, caption=image_id)
 
