@@ -11,6 +11,13 @@ from supabase import create_client
 # =========================
 MANIFEST_CSV = r"rating_dataset/manifest.csv"
 
+# 第一頁範例影像資料夾
+# 本機位置：G:\app\rating_dataset\example
+# Streamlit Cloud 位置：rating_dataset/example
+EXAMPLE_DIR = r"rating_dataset/example"
+
+VALID_EXT = [".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff"]
+
 
 # =========================
 # Supabase 設定
@@ -28,14 +35,26 @@ def get_supabase_client():
 # =========================
 REGION_LABELS = {
     "face": "臉部皮膚",
-    "hand": "手背皮膚",
-    "handback": "手背皮膚"
+    "hand": "手部皮膚",
+    "handback": "手部皮膚"
 }
 
 
 def get_region_label(region):
     region = str(region).lower()
     return REGION_LABELS.get(region, str(region))
+
+
+def get_example_region_label(filename_stem):
+    name = filename_stem.lower()
+
+    if name.startswith("hand"):
+        return "手部皮膚"
+
+    if name.startswith("face"):
+        return "臉部皮膚"
+
+    return "皮膚影像"
 
 
 # =========================
@@ -449,47 +468,51 @@ def show_image_responsive(img, caption=None):
         st.image(img, caption=caption, use_column_width=True)
 
 
+def find_image_by_stem(folder, stem):
+    for ext in VALID_EXT:
+        candidate = os.path.join(folder, stem + ext)
+        if os.path.exists(candidate):
+            return candidate
+    return None
+
+
 # =========================
-# 第一頁：真實 FFOCT 參考影像
+# 第一頁：固定 example 範例影像
 # =========================
-def get_reference_ffoct_images(df, n_total=9):
-    ref_df = df[df["method"].astype(str).str.upper() == "FFOCT"].copy()
+def get_example_images():
+    """
+    讀取 rating_dataset/example 裡的範例影像。
+    命名規則：
+    hand1-hand5
+    face1-face4
+    """
+    ordered_stems = [
+        "hand1", "hand2", "hand3", "hand4", "hand5",
+        "face1", "face2", "face3", "face4"
+    ]
 
-    if len(ref_df) == 0:
-        return ref_df
+    rows = []
 
-    ref_df = ref_df.sort_values(["region", "case_number", "case_id", "image_id"])
+    for stem in ordered_stems:
+        path = find_image_by_stem(EXAMPLE_DIR, stem)
 
-    face_df = ref_df[ref_df["region"].astype(str).str.lower() == "face"]
-    hand_df = ref_df[ref_df["region"].astype(str).str.lower().isin(["hand", "handback"])]
+        if path is not None:
+            rows.append({
+                "stem": stem,
+                "image_path": path,
+                "region_label": get_example_region_label(stem)
+            })
+        else:
+            rows.append({
+                "stem": stem,
+                "image_path": None,
+                "region_label": get_example_region_label(stem)
+            })
 
-    selected = []
-
-    n_face = min(5, len(face_df))
-    n_hand = min(4, len(hand_df))
-
-    if n_face > 0:
-        selected.append(face_df.head(n_face))
-    if n_hand > 0:
-        selected.append(hand_df.head(n_hand))
-
-    if len(selected) > 0:
-        selected_df = pd.concat(selected, ignore_index=True)
-    else:
-        selected_df = pd.DataFrame(columns=ref_df.columns)
-
-    if len(selected_df) < n_total:
-        used_ids = set(selected_df["image_id"].tolist())
-        remain_df = ref_df[~ref_df["image_id"].isin(used_ids)]
-        selected_df = pd.concat(
-            [selected_df, remain_df.head(n_total - len(selected_df))],
-            ignore_index=True
-        )
-
-    return selected_df.head(n_total)
+    return rows
 
 
-def show_intro_page(df):
+def show_intro_page():
     st.title("FFOCT 影像主觀評分系統")
 
     st.markdown(
@@ -504,33 +527,31 @@ def show_intro_page(df):
         unsafe_allow_html=True
     )
 
-    ref_df = get_reference_ffoct_images(df, n_total=9)
+    example_rows = get_example_images()
 
-    if len(ref_df) == 0:
-        st.warning("manifest.csv 中找不到 method = FFOCT 的影像，無法顯示參考頁。")
-        st.session_state.intro_done = True
-        st.rerun()
+    if not os.path.isdir(EXAMPLE_DIR):
+        st.warning(f"找不到範例資料夾：{EXAMPLE_DIR}")
+        st.info("請建立資料夾 rating_dataset/example，並放入 hand1-hand5、face1-face4 的圖片。")
 
     cols_per_row = 3
 
-    for start_idx in range(0, len(ref_df), cols_per_row):
+    for start_idx in range(0, len(example_rows), cols_per_row):
         cols = st.columns(cols_per_row)
 
-        for col, (_, row) in zip(cols, ref_df.iloc[start_idx:start_idx + cols_per_row].iterrows()):
+        for col, row in zip(cols, example_rows[start_idx:start_idx + cols_per_row]):
             with col:
-                image_path = row["image_path"]
-                region_label = get_region_label(row["region"])
-
                 st.markdown(
-                    f"<div class='reference-badge'>部位：{region_label}</div>",
+                    f"<div class='reference-badge'>部位：{row['region_label']}</div>",
                     unsafe_allow_html=True
                 )
 
-                if os.path.exists(image_path):
+                image_path = row["image_path"]
+
+                if image_path is not None and os.path.exists(image_path):
                     img = Image.open(image_path)
                     show_image_responsive(img)
                 else:
-                    st.error(f"找不到參考影像：{image_path}")
+                    st.warning(f"缺少範例影像：{row['stem']}")
 
                 st.markdown("<div style='height: 0.3rem;'></div>", unsafe_allow_html=True)
 
@@ -587,7 +608,7 @@ def main():
         st.session_state.intro_done = False
 
     if not st.session_state.intro_done:
-        show_intro_page(df)
+        show_intro_page()
         st.stop()
 
     if "expert_id" not in st.session_state:
