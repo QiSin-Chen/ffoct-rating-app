@@ -24,44 +24,68 @@ def get_supabase_client():
 
 
 # =========================
-# 評分定義文字
+# 顯示名稱設定
 # =========================
-SCORE_DEFINITIONS = {
-    "overall": """
-<b>FFOCT-like appearance<br>整體是否像真實 FFOCT 影像</b><br>
-1：完全不像 FFOCT，仍呈現明顯 SSOCT 或雜訊外觀。<br>
-2：僅少部分區域具有 FFOCT-like 特徵。<br>
-3：中等程度接近 FFOCT，但仍可見明顯差異。<br>
-4：多數區域接近 FFOCT 外觀。<br>
-5：整體高度接近真實 FFOCT 影像。
-""",
+REGION_LABELS = {
+    "face": "臉部皮膚",
+    "hand": "手背皮膚",
+    "handback": "手背皮膚"
+}
 
-    "layer": """
-<b>Skin layer visibility<br>皮膚層狀結構是否清楚</b><br>
-1：幾乎無法辨識皮膚層。<br>
-2：僅可粗略看到表面或單一層次。<br>
-3：可辨識部分皮膚層，但邊界不穩定或不連續。<br>
-4：多數皮膚層可清楚辨識，僅局部模糊。<br>
-5：皮膚層結構清楚、連續，具有良好判讀性。
-""",
 
-    "nucleus": """
-<b>Nuclei-like microstructure visibility<br>細胞核樣微結構是否可見</b><br>
-1：完全無可辨識細胞核樣結構。<br>
-2：僅有少數不明確亮點或疑似結構。<br>
-3：可見部分細胞核樣特徵，但數量或邊界不穩定。<br>
-4：多數區域可見合理細胞核樣微結構。<br>
-5：細胞核樣結構清楚、分布自然，接近真實 FFOCT 表現。
-""",
+def get_region_label(region):
+    region = str(region).lower()
+    return REGION_LABELS.get(region, str(region))
 
-    "artifact": """
-<b>Artifact-free score<br>影像是否無明顯偽影</b><br>
-1：偽影嚴重，明顯影響判讀。<br>
-2：有多處偽影，影響部分結構判斷。<br>
-3：有中等程度偽影，但仍可部分判讀。<br>
-4：僅有少量輕微偽影，不明顯影響判讀。<br>
-5：幾乎無明顯偽影，影像穩定且自然。
-"""
+
+# =========================
+# 評分項目與 1–5 分定義
+# =========================
+RATING_ITEMS = {
+    "overall": {
+        "title": "1. FFOCT-like appearance",
+        "subtitle": "整體是否像真實 FFOCT 影像",
+        "options": {
+            1: "1：完全不像 FFOCT，仍呈現明顯 SSOCT 或雜訊外觀。",
+            2: "2：僅少部分區域具有 FFOCT-like 特徵。",
+            3: "3：中等程度接近 FFOCT，但仍可見明顯差異。",
+            4: "4：多數區域接近 FFOCT 外觀。",
+            5: "5：整體高度接近真實 FFOCT 影像。"
+        }
+    },
+    "layer": {
+        "title": "2. Skin layer visibility",
+        "subtitle": "皮膚層狀結構是否清楚",
+        "options": {
+            1: "1：幾乎無法辨識皮膚層。",
+            2: "2：僅可粗略看到表面或單一層次。",
+            3: "3：可辨識部分皮膚層，但邊界不穩定或不連續。",
+            4: "4：多數皮膚層可清楚辨識，僅局部模糊。",
+            5: "5：皮膚層結構清楚、連續，具有良好判讀性。"
+        }
+    },
+    "nucleus": {
+        "title": "3. Nuclei-like microstructure visibility",
+        "subtitle": "細胞核樣微結構是否可見",
+        "options": {
+            1: "1：完全無可辨識細胞核樣結構。",
+            2: "2：僅有少數不明確亮點或疑似結構。",
+            3: "3：可見部分細胞核樣特徵，但數量或邊界不穩定。",
+            4: "4：多數區域可見合理細胞核樣微結構。",
+            5: "5：細胞核樣結構清楚、分布自然，接近真實 FFOCT 表現。"
+        }
+    },
+    "artifact": {
+        "title": "4. Artifact-free score",
+        "subtitle": "影像是否無明顯偽影",
+        "options": {
+            1: "1：偽影嚴重，明顯影響判讀。",
+            2: "2：有多處偽影，影響部分結構判斷。",
+            3: "3：有中等程度偽影，但仍可部分判讀。",
+            4: "4：僅有少量輕微偽影，不明顯影響判讀。",
+            5: "5：幾乎無明顯偽影，影像穩定且自然。"
+        }
+    }
 }
 
 
@@ -193,10 +217,6 @@ def inject_css():
     st.markdown(
         """
         <style>
-        /* =========================================================
-           Force light theme
-        ========================================================= */
-
         html, body,
         .stApp,
         [data-testid="stAppViewContainer"],
@@ -212,10 +232,10 @@ def inject_css():
         }
 
         .block-container {
-            padding-top: 2.4rem !important;
+            padding-top: 1.8rem !important;
             padding-bottom: 0.4rem !important;
-            padding-left: 1.1rem !important;
-            padding-right: 1.1rem !important;
+            padding-left: 1.2rem !important;
+            padding-right: 1.2rem !important;
             max-width: 100% !important;
             background-color: #ffffff !important;
             color: #111111 !important;
@@ -234,25 +254,25 @@ def inject_css():
         }
 
         h1 {
-            font-size: 1.80rem !important;
+            font-size: clamp(1.45rem, 2vw, 1.85rem) !important;
             margin-top: 0rem !important;
             margin-bottom: 0.22rem !important;
         }
 
         h2 {
-            font-size: 1.36rem !important;
+            font-size: clamp(1.20rem, 1.7vw, 1.45rem) !important;
             margin-top: 0.10rem !important;
             margin-bottom: 0.10rem !important;
         }
 
         h3 {
-            font-size: 1.22rem !important;
+            font-size: clamp(1.05rem, 1.4vw, 1.25rem) !important;
             margin-top: 0.10rem !important;
             margin-bottom: 0.16rem !important;
         }
 
         h4 {
-            font-size: 1.22rem !important;
+            font-size: clamp(1.00rem, 1.25vw, 1.18rem) !important;
             margin-top: 0.06rem !important;
             margin-bottom: 0.14rem !important;
         }
@@ -260,19 +280,15 @@ def inject_css():
         p {
             margin-top: 0rem !important;
             margin-bottom: 0.12rem !important;
-            font-size: 0.98rem !important;
+            font-size: clamp(0.90rem, 1.1vw, 1.02rem) !important;
         }
 
         .top-info {
-            font-size: 1.00rem;
+            font-size: clamp(0.90rem, 1.1vw, 1.00rem);
             margin-bottom: 0.15rem;
             font-weight: 600;
             color: #111111 !important;
         }
-
-        /* =========================================================
-           Selectbox：白底黑字
-        ========================================================= */
 
         div[data-baseweb="select"] > div,
         div[data-baseweb="select"] div,
@@ -298,124 +314,107 @@ def inject_css():
             color: #111111 !important;
         }
 
-        /* =========================================================
-           評分說明框：固定白底黑字
-        ========================================================= */
+        .reference-card {
+            border: 1px solid #dddddd;
+            border-radius: 10px;
+            padding: 10px;
+            background-color: #fafafa;
+            margin-bottom: 12px;
+        }
 
-        .score-box {
+        .reference-caption {
+            text-align: center;
+            font-size: clamp(0.90rem, 1vw, 1.05rem);
+            font-weight: 600;
+            color: #111111 !important;
+            margin-top: 6px;
+        }
+
+        .region-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 999px;
+            background-color: #eeeeee;
+            border: 1px solid #cccccc;
+            font-size: clamp(0.85rem, 1vw, 0.98rem);
+            font-weight: 600;
+            color: #111111 !important;
+            margin-bottom: 6px;
+        }
+
+        .score-card {
             background-color: #f7f7f7 !important;
             color: #111111 !important;
-            padding: 12px 15px;
+            padding: 12px 14px;
             border-radius: 8px;
             border: 1px solid #d8d8d8;
-            font-size: 17px;
-            line-height: 1.48;
-            height: 210px;
-            overflow: hidden;
-            margin-bottom: 8px;
+            font-size: clamp(0.95rem, 1.05vw, 1.08rem);
+            line-height: 1.45;
+            margin-bottom: 12px;
+            min-height: 250px;
         }
 
-        .score-box,
-        .score-box b,
-        .score-box span,
-        .score-box div,
-        .score-box p,
-        .score-box * {
+        .score-card,
+        .score-card b,
+        .score-card span,
+        .score-card div,
+        .score-card p,
+        .score-card * {
             color: #111111 !important;
-            background-color: transparent !important;
         }
 
-        .score-box {
+        .score-subtitle {
+            font-weight: 700;
+            margin-bottom: 8px;
+            font-size: clamp(0.95rem, 1.10vw, 1.10rem);
+        }
+
+        /* 垂直 radio：每個選項直接接在 1–5 說明旁邊 */
+        .score-card div[role="radiogroup"] {
+            margin-top: 0rem !important;
+            margin-bottom: 0rem !important;
             background-color: #f7f7f7 !important;
         }
 
-        /* =========================================================
-           Radio：
-           未選：白底 + 細黑框
-           已選：白底 + 細黑框 + 中間黑色圓點
-        ========================================================= */
-
-        div[role="radiogroup"] {
-            margin-top: 0.45rem !important;
-            margin-bottom: 0.35rem !important;
-            color: #111111 !important;
-            background-color: #ffffff !important;
-        }
-
-        label[data-baseweb="radio"] {
-            margin-right: 1.05rem !important;
-            padding: 8px 4px 8px 34px !important;
-            font-size: 1.28rem !important;
-            cursor: pointer !important;
-            color: #111111 !important;
-            background-color: #ffffff !important;
-            position: relative !important;
-            display: inline-flex !important;
+        .score-card label[data-baseweb="radio"] {
+            display: flex !important;
             align-items: center !important;
             min-height: 34px !important;
-            line-height: 1 !important;
-        }
-
-        label[data-baseweb="radio"] p,
-        label[data-baseweb="radio"] span {
-            font-size: 1.28rem !important;
-            margin-left: 0rem !important;
+            margin-top: 4px !important;
+            margin-bottom: 4px !important;
+            padding: 3px 4px !important;
+            cursor: pointer !important;
             color: #111111 !important;
+            background-color: #f7f7f7 !important;
+        }
+
+        .score-card label[data-baseweb="radio"] p,
+        .score-card label[data-baseweb="radio"] span {
+            font-size: clamp(0.95rem, 1.08vw, 1.08rem) !important;
+            color: #111111 !important;
+            line-height: 1.35 !important;
+        }
+
+        /* radio 原生外圈：固定白底黑框 */
+        .score-card label[data-baseweb="radio"] > div:first-child {
+            transform: scale(1.15);
+            margin-right: 0.65rem !important;
             background-color: #ffffff !important;
-            line-height: 1 !important;
+            border: 1.2px solid #111111 !important;
+            box-shadow: none !important;
         }
 
-        /* 隱藏 Streamlit / BaseWeb 預設的 radio 圖形 */
-        label[data-baseweb="radio"] > div:first-child,
-        label[data-baseweb="radio"] svg,
-        label[data-baseweb="radio"] path {
-            display: none !important;
+        .score-card label[data-baseweb="radio"] svg,
+        .score-card label[data-baseweb="radio"] path {
+            color: #111111 !important;
+            fill: #111111 !important;
+            stroke: #111111 !important;
         }
-
-        /* 自訂 radio 外圈：與數字同高、白底細黑框 */
-        label[data-baseweb="radio"]::before {
-            content: "";
-            position: absolute;
-            left: 4px;
-            top: 50%;
-            width: 18px;
-            height: 18px;
-            border: 1.4px solid #111111;
-            border-radius: 50%;
-            background-color: #ffffff;
-            transform: translateY(-50%);
-            box-sizing: border-box;
-        }
-
-        /* 自訂 radio 內圈：與外圈共用同一中心點 */
-        label[data-baseweb="radio"]::after {
-            content: "";
-            position: absolute;
-            left: 9px;
-            top: 50%;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: #111111;
-            transform: translateY(-50%);
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        /* 被選取時：中間黑點顯示 */
-        label[data-baseweb="radio"]:has(input:checked)::after,
-        label[data-baseweb="radio"]:has([aria-checked="true"])::after {
-            opacity: 1;
-        }
-
-        /* =========================================================
-           Button：白底黑字
-        ========================================================= */
 
         .stButton > button {
             width: 100%;
             height: 3.0rem;
-            font-size: 1.08rem;
+            font-size: clamp(0.95rem, 1.1vw, 1.08rem);
             font-weight: 700;
             border-radius: 8px;
             background-color: #ffffff !important;
@@ -437,18 +436,25 @@ def inject_css():
         }
 
         [data-testid="stCaptionContainer"] {
-            font-size: 0.85rem !important;
+            font-size: clamp(0.78rem, 0.95vw, 0.90rem) !important;
             margin-bottom: 0.35rem !important;
             color: #6b7280 !important;
         }
 
-        hr {
-            margin-top: 0.25rem !important;
-            margin-bottom: 0.25rem !important;
+        div[data-testid="stVerticalBlock"] {
+            gap: 0.35rem !important;
         }
 
-        div[data-testid="stVerticalBlock"] {
-            gap: 0.28rem !important;
+        /* 小螢幕時自動放寬間距，讓內容比較不擠 */
+        @media (max-width: 900px) {
+            .block-container {
+                padding-left: 0.7rem !important;
+                padding-right: 0.7rem !important;
+            }
+
+            .score-card {
+                min-height: auto;
+            }
         }
         </style>
         """,
@@ -456,27 +462,146 @@ def inject_css():
     )
 
 
-def show_score_definition(html_text):
+# =========================
+# 圖片顯示工具
+# =========================
+def show_image_responsive(img, caption=None):
+    """
+    讓不同版本 Streamlit 都可顯示滿版圖片。
+    新版用 use_container_width；舊版 fallback 到 use_column_width。
+    """
+    try:
+        st.image(img, caption=caption, use_container_width=True)
+    except TypeError:
+        st.image(img, caption=caption, use_column_width=True)
+
+
+# =========================
+# 第一頁：真實 FFOCT 參考影像
+# =========================
+def get_reference_ffoct_images(df, n_total=9):
+    """
+    從 manifest 中挑選真實 FFOCT 影像作為參考。
+    優先平均取 face 與 hand/handback，不足再由其他 FFOCT 補滿。
+    """
+    ref_df = df[df["method"].astype(str).str.upper() == "FFOCT"].copy()
+
+    if len(ref_df) == 0:
+        return ref_df
+
+    ref_df = ref_df.sort_values(["region", "case_number", "case_id", "image_id"])
+
+    face_df = ref_df[ref_df["region"].astype(str).str.lower() == "face"]
+    hand_df = ref_df[ref_df["region"].astype(str).str.lower().isin(["hand", "handback"])]
+
+    selected = []
+
+    n_face = min(5, len(face_df))
+    n_hand = min(4, len(hand_df))
+
+    if n_face > 0:
+        selected.append(face_df.head(n_face))
+    if n_hand > 0:
+        selected.append(hand_df.head(n_hand))
+
+    if len(selected) > 0:
+        selected_df = pd.concat(selected, ignore_index=True)
+    else:
+        selected_df = pd.DataFrame(columns=ref_df.columns)
+
+    if len(selected_df) < n_total:
+        used_ids = set(selected_df["image_id"].tolist())
+        remain_df = ref_df[~ref_df["image_id"].isin(used_ids)]
+        selected_df = pd.concat(
+            [selected_df, remain_df.head(n_total - len(selected_df))],
+            ignore_index=True
+        )
+
+    return selected_df.head(n_total)
+
+
+def show_intro_page(df):
+    st.title("FFOCT 影像主觀評分系統")
+
     st.markdown(
-        f"<div class='score-box'>{html_text.strip()}</div>",
-        unsafe_allow_html=True
+        """
+        ### 評分前參考：真實 FFOCT 影像範例
+
+        以下影像為真實 FFOCT 影像，請先觀察其整體外觀、皮膚層狀結構、細胞核樣微結構與影像自然程度。  
+        看完後請按下方按鈕開始正式評分。
+        """
     )
 
+    ref_df = get_reference_ffoct_images(df, n_total=9)
 
-def score_card(title, definition_key, radio_key):
-    st.markdown(f"#### {title}")
-    show_score_definition(SCORE_DEFINITIONS[definition_key])
+    if len(ref_df) == 0:
+        st.warning("manifest.csv 中找不到 method = FFOCT 的影像，無法顯示參考頁。")
+        st.session_state.intro_done = True
+        st.rerun()
 
-    st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
+    cols_per_row = 3
 
-    score = st.radio(
-        title,
-        [1, 2, 3, 4, 5],
-        horizontal=True,
-        index=None,
-        key=radio_key,
-        label_visibility="collapsed"
-    )
+    for start_idx in range(0, len(ref_df), cols_per_row):
+        cols = st.columns(cols_per_row)
+
+        for col, (_, row) in zip(cols, ref_df.iloc[start_idx:start_idx + cols_per_row].iterrows()):
+            with col:
+                image_path = row["image_path"]
+                region_label = get_region_label(row["region"])
+
+                st.markdown("<div class='reference-card'>", unsafe_allow_html=True)
+                st.markdown(
+                    f"<div class='region-badge'>部位：{region_label}</div>",
+                    unsafe_allow_html=True
+                )
+
+                if os.path.exists(image_path):
+                    img = Image.open(image_path)
+                    show_image_responsive(img)
+                else:
+                    st.error(f"找不到參考影像：{image_path}")
+
+                st.markdown(
+                    "<div class='reference-caption'>真實 FFOCT 參考影像</div>",
+                    unsafe_allow_html=True
+                )
+                st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    col_left, col_mid, col_right = st.columns([2, 1.2, 2])
+
+    with col_mid:
+        if st.button("我已看完參考影像，開始評分"):
+            st.session_state.intro_done = True
+            st.rerun()
+
+
+# =========================
+# 評分卡片
+# =========================
+def score_card(item_key, radio_key):
+    item = RATING_ITEMS[item_key]
+
+    st.markdown(f"#### {item['title']}")
+
+    with st.container():
+        st.markdown("<div class='score-card'>", unsafe_allow_html=True)
+        st.markdown(
+            f"<div class='score-subtitle'>{item['subtitle']}</div>",
+            unsafe_allow_html=True
+        )
+
+        score = st.radio(
+            label=item["title"],
+            options=[1, 2, 3, 4, 5],
+            format_func=lambda x: item["options"][x],
+            index=None,
+            key=radio_key,
+            label_visibility="collapsed"
+        )
+
+        st.markdown("</div>", unsafe_allow_html=True)
 
     return score
 
@@ -493,6 +618,13 @@ def main():
     inject_css()
 
     df = load_manifest()
+
+    if "intro_done" not in st.session_state:
+        st.session_state.intro_done = False
+
+    if not st.session_state.intro_done:
+        show_intro_page(df)
+        st.stop()
 
     if "expert_id" not in st.session_state:
         st.session_state.expert_id = "expert_1"
@@ -515,6 +647,7 @@ def main():
     current_row = unrated_df.iloc[0]
     image_id = current_row["image_id"]
     image_path = current_row["image_path"]
+    region_label = get_region_label(current_row["region"])
 
     st.title("FFOCT 影像主觀評分系統")
 
@@ -522,7 +655,7 @@ def main():
         "請根據目前顯示的影像進行評分。每個項目皆為 **1 至 5 分**，其中 **1 分代表最差，5 分代表最好**。"
     )
 
-    top_col1, top_col2, top_col3, top_col4 = st.columns([1.2, 1.1, 3.8, 1.25])
+    top_col1, top_col2, top_col3, top_col4 = st.columns([1.15, 1.05, 3.4, 1.35])
 
     with top_col1:
         selected_expert = st.selectbox(
@@ -553,15 +686,20 @@ def main():
         st.markdown("<br>", unsafe_allow_html=True)
         submit = st.button("儲存並前往下一張")
 
-    left_col, right_col = st.columns([1.00, 3.10])
+    left_col, right_col = st.columns([1.00, 3.35])
 
     with left_col:
         if os.path.exists(image_path):
             img = Image.open(image_path)
 
+            st.markdown(
+                f"<div class='region-badge'>部位：{region_label}</div>",
+                unsafe_allow_html=True
+            )
             st.caption(f"原始尺寸：{img.width} × {img.height}")
-            st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
-            st.image(img, caption=image_id, width=420)
+            st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
+
+            show_image_responsive(img, caption=image_id)
 
         else:
             st.error(f"找不到影像：{image_path}")
@@ -574,14 +712,12 @@ def main():
 
         with row1_col1:
             overall_score = score_card(
-                "1. FFOCT-like appearance",
                 "overall",
                 f"{image_id}_overall"
             )
 
         with row1_col2:
             layer_score = score_card(
-                "2. Skin layer visibility",
                 "layer",
                 f"{image_id}_layer"
             )
@@ -590,14 +726,12 @@ def main():
 
         with row2_col1:
             nucleus_score = score_card(
-                "3. Nuclei-like visibility",
                 "nucleus",
                 f"{image_id}_nucleus"
             )
 
         with row2_col2:
             artifact_score = score_card(
-                "4. Artifact-free score",
                 "artifact",
                 f"{image_id}_artifact"
             )
