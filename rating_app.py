@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-import base64
 import pandas as pd
 import streamlit as st
 from PIL import Image
@@ -225,7 +224,7 @@ def inject_css():
         }
 
         .block-container {
-            padding-top: 3.6rem !important;
+            padding-top: 3.4rem !important;
             padding-bottom: 0.8rem !important;
             padding-left: 1.2rem !important;
             padding-right: 1.2rem !important;
@@ -316,31 +315,7 @@ def inject_css():
             margin-bottom: 0.75rem !important;
         }
 
-        .reference-badge {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 999px;
-            background-color: #eeeeee;
-            border: 1px solid #cccccc;
-            font-size: clamp(0.85rem, 1vw, 0.98rem);
-            font-weight: 600;
-            color: #111111 !important;
-            margin-top: 0rem !important;
-            margin-bottom: 5px !important;
-        }
-
-        .reference-img {
-            width: 100%;
-            height: 21.5vh;
-            min-height: 145px;
-            max-height: 220px;
-            object-fit: contain;
-            background-color: #000000;
-            border-radius: 7px;
-            display: block;
-            margin-bottom: 0.55rem;
-        }
-
+        .reference-badge,
         .region-badge {
             display: inline-block;
             padding: 3px 8px;
@@ -351,7 +326,7 @@ def inject_css():
             font-weight: 600;
             color: #111111 !important;
             margin-top: 0rem !important;
-            margin-bottom: 7px !important;
+            margin-bottom: 10px !important;
         }
 
         .score-subtitle {
@@ -443,20 +418,19 @@ def inject_css():
             color: #6b7280 !important;
         }
 
+        [data-testid="stImage"] img {
+            border-radius: 8px !important;
+        }
+
         div[data-testid="stVerticalBlock"] {
             gap: 0.28rem !important;
         }
 
         @media (max-width: 900px) {
             .block-container {
-                padding-top: 3.2rem !important;
+                padding-top: 3.0rem !important;
                 padding-left: 0.7rem !important;
                 padding-right: 0.7rem !important;
-            }
-
-            .reference-img {
-                height: 18vh;
-                min-height: 120px;
             }
         }
         </style>
@@ -473,24 +447,6 @@ def show_image_responsive(img, caption=None):
         st.image(img, caption=caption, use_container_width=True)
     except TypeError:
         st.image(img, caption=caption, use_column_width=True)
-
-
-def image_to_base64(image_path):
-    with open(image_path, "rb") as f:
-        return base64.b64encode(f.read()).decode("utf-8")
-
-
-def show_reference_image_html(image_path):
-    try:
-        img_b64 = image_to_base64(image_path)
-        st.markdown(
-            f"""
-            <img class="reference-img" src="data:image/png;base64,{img_b64}">
-            """,
-            unsafe_allow_html=True
-        )
-    except Exception:
-        st.error(f"無法讀取參考影像：{image_path}")
 
 
 # =========================
@@ -571,11 +527,14 @@ def show_intro_page(df):
                 )
 
                 if os.path.exists(image_path):
-                    show_reference_image_html(image_path)
+                    img = Image.open(image_path)
+                    show_image_responsive(img)
                 else:
                     st.error(f"找不到參考影像：{image_path}")
 
-    st.markdown("<div style='height: 0.3rem;'></div>", unsafe_allow_html=True)
+                st.markdown("<div style='height: 0.3rem;'></div>", unsafe_allow_html=True)
+
+    st.markdown("<div style='height: 0.25rem;'></div>", unsafe_allow_html=True)
 
     col_left, col_mid, col_right = st.columns([2, 1.2, 2])
 
@@ -641,7 +600,6 @@ def main():
 
     total_images = len(df)
     rated_count = len(rated_ids)
-    progress = rated_count / total_images if total_images > 0 else 0
 
     unrated_df = df[~df["image_id"].isin(rated_ids)]
 
@@ -702,7 +660,7 @@ def main():
                 unsafe_allow_html=True
             )
             st.caption(f"原始尺寸：{img.width} × {img.height}")
-
+            st.markdown("<div style='height: 2px;'></div>", unsafe_allow_html=True)
             show_image_responsive(img, caption=image_id)
 
         else:
