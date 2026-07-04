@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import base64
 import pandas as pd
 import streamlit as st
 from PIL import Image
@@ -224,7 +225,7 @@ def inject_css():
         }
 
         .block-container {
-            padding-top: 2.8rem !important;
+            padding-top: 3.6rem !important;
             padding-bottom: 0.8rem !important;
             padding-left: 1.2rem !important;
             padding-right: 1.2rem !important;
@@ -247,8 +248,8 @@ def inject_css():
 
         h1 {
             font-size: clamp(1.55rem, 2vw, 1.95rem) !important;
-            margin-top: 0.4rem !important;
-            margin-bottom: 0.35rem !important;
+            margin-top: 0.2rem !important;
+            margin-bottom: 0.45rem !important;
             line-height: 1.25 !important;
         }
 
@@ -311,6 +312,35 @@ def inject_css():
             color: #111111 !important;
         }
 
+        .intro-text {
+            margin-bottom: 0.75rem !important;
+        }
+
+        .reference-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 999px;
+            background-color: #eeeeee;
+            border: 1px solid #cccccc;
+            font-size: clamp(0.85rem, 1vw, 0.98rem);
+            font-weight: 600;
+            color: #111111 !important;
+            margin-top: 0rem !important;
+            margin-bottom: 5px !important;
+        }
+
+        .reference-img {
+            width: 100%;
+            height: 21.5vh;
+            min-height: 145px;
+            max-height: 220px;
+            object-fit: contain;
+            background-color: #000000;
+            border-radius: 7px;
+            display: block;
+            margin-bottom: 0.55rem;
+        }
+
         .region-badge {
             display: inline-block;
             padding: 3px 8px;
@@ -321,16 +351,7 @@ def inject_css():
             font-weight: 600;
             color: #111111 !important;
             margin-top: 0rem !important;
-            margin-bottom: 4px !important;
-        }
-
-        .reference-caption {
-            text-align: center;
-            font-size: clamp(0.88rem, 1vw, 1.02rem);
-            font-weight: 600;
-            color: #111111 !important;
-            margin-top: 4px;
-            margin-bottom: 10px;
+            margin-bottom: 7px !important;
         }
 
         .score-subtitle {
@@ -340,18 +361,17 @@ def inject_css():
             font-size: clamp(1.00rem, 1.10vw, 1.12rem);
         }
 
-        /* 讓 Streamlit 原生 border container 內容更緊湊 */
         [data-testid="stVerticalBlockBorderWrapper"] {
             background-color: #f7f7f7 !important;
             border: 1px solid #d8d8d8 !important;
             border-radius: 8px !important;
+            padding-top: 0.2rem !important;
         }
 
         [data-testid="stVerticalBlockBorderWrapper"] * {
             color: #111111 !important;
         }
 
-        /* 垂直 radio：每個選項直接放在框框裡 */
         [data-testid="stVerticalBlockBorderWrapper"] div[role="radiogroup"] {
             margin-top: 0rem !important;
             margin-bottom: 0rem !important;
@@ -418,7 +438,8 @@ def inject_css():
 
         [data-testid="stCaptionContainer"] {
             font-size: clamp(0.78rem, 0.95vw, 0.90rem) !important;
-            margin-bottom: 0.25rem !important;
+            margin-top: 0.10rem !important;
+            margin-bottom: 0.35rem !important;
             color: #6b7280 !important;
         }
 
@@ -426,12 +447,16 @@ def inject_css():
             gap: 0.28rem !important;
         }
 
-        /* 小螢幕時自動放寬間距 */
         @media (max-width: 900px) {
             .block-container {
-                padding-top: 2.4rem !important;
+                padding-top: 3.2rem !important;
                 padding-left: 0.7rem !important;
                 padding-right: 0.7rem !important;
+            }
+
+            .reference-img {
+                height: 18vh;
+                min-height: 120px;
             }
         }
         </style>
@@ -448,6 +473,24 @@ def show_image_responsive(img, caption=None):
         st.image(img, caption=caption, use_container_width=True)
     except TypeError:
         st.image(img, caption=caption, use_column_width=True)
+
+
+def image_to_base64(image_path):
+    with open(image_path, "rb") as f:
+        return base64.b64encode(f.read()).decode("utf-8")
+
+
+def show_reference_image_html(image_path):
+    try:
+        img_b64 = image_to_base64(image_path)
+        st.markdown(
+            f"""
+            <img class="reference-img" src="data:image/png;base64,{img_b64}">
+            """,
+            unsafe_allow_html=True
+        )
+    except Exception:
+        st.error(f"無法讀取參考影像：{image_path}")
 
 
 # =========================
@@ -497,9 +540,12 @@ def show_intro_page(df):
         """
 ### 評分前參考：真實 FFOCT 影像範例
 
-以下影像為真實 FFOCT 影像，請先觀察其整體外觀、皮膚層狀結構、細胞核樣微結構與影像自然程度。  
+<div class="intro-text">
+以下影像為真實 FFOCT 影像，請先觀察其整體外觀、皮膚層狀結構、細胞核樣微結構與影像自然程度。<br>
 看完後請按下方按鈕開始正式評分。
-        """
+</div>
+        """,
+        unsafe_allow_html=True
     )
 
     ref_df = get_reference_ffoct_images(df, n_total=9)
@@ -520,22 +566,16 @@ def show_intro_page(df):
                 region_label = get_region_label(row["region"])
 
                 st.markdown(
-                    f"<div class='region-badge'>部位：{region_label}</div>",
+                    f"<div class='reference-badge'>部位：{region_label}</div>",
                     unsafe_allow_html=True
                 )
 
                 if os.path.exists(image_path):
-                    img = Image.open(image_path)
-                    show_image_responsive(img)
+                    show_reference_image_html(image_path)
                 else:
                     st.error(f"找不到參考影像：{image_path}")
 
-                st.markdown(
-                    "<div class='reference-caption'>真實 FFOCT 參考影像</div>",
-                    unsafe_allow_html=True
-                )
-
-    st.markdown("---")
+    st.markdown("<div style='height: 0.3rem;'></div>", unsafe_allow_html=True)
 
     col_left, col_mid, col_right = st.columns([2, 1.2, 2])
 
@@ -662,7 +702,6 @@ def main():
                 unsafe_allow_html=True
             )
             st.caption(f"原始尺寸：{img.width} × {img.height}")
-            st.markdown("<div style='height: 4px;'></div>", unsafe_allow_html=True)
 
             show_image_responsive(img, caption=image_id)
 
