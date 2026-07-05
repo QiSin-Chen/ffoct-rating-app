@@ -11,9 +11,6 @@ from supabase import create_client
 # =========================
 MANIFEST_CSV = r"rating_dataset/manifest.csv"
 
-# 第一頁範例影像資料夾
-# 本機位置：G:\app\rating_dataset\example
-# Streamlit Cloud 位置：rating_dataset/example
 EXAMPLE_DIR = r"rating_dataset/example"
 
 VALID_EXT = [".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff"]
@@ -150,6 +147,9 @@ def get_empty_result_df():
 
 
 def load_existing_result(expert_id):
+    if expert_id.strip() == "":
+        return get_empty_result_df()
+
     supabase = get_supabase_client()
 
     try:
@@ -194,7 +194,7 @@ def load_existing_result(expert_id):
     return df[keep_cols]
 
 
-def save_rating(row_data, expert_id):
+def save_rating(row_data):
     supabase = get_supabase_client()
 
     payload = {
@@ -308,7 +308,9 @@ def inject_css():
 
         div[data-baseweb="select"] > div,
         div[data-baseweb="select"] div,
-        div[data-baseweb="select"] span {
+        div[data-baseweb="select"] span,
+        div[data-baseweb="input"] > div,
+        input {
             background-color: #ffffff !important;
             color: #111111 !important;
             border-color: #cccccc !important;
@@ -480,12 +482,6 @@ def find_image_by_stem(folder, stem):
 # 第一頁：固定 example 範例影像
 # =========================
 def get_example_images():
-    """
-    讀取 rating_dataset/example 裡的範例影像。
-    命名規則：
-    hand1-hand5
-    face1-face4
-    """
     ordered_stems = [
         "hand1", "hand2", "hand3", "hand4", "hand5",
         "face1", "face2", "face3", "face4"
@@ -496,18 +492,11 @@ def get_example_images():
     for stem in ordered_stems:
         path = find_image_by_stem(EXAMPLE_DIR, stem)
 
-        if path is not None:
-            rows.append({
-                "stem": stem,
-                "image_path": path,
-                "region_label": get_example_region_label(stem)
-            })
-        else:
-            rows.append({
-                "stem": stem,
-                "image_path": None,
-                "region_label": get_example_region_label(stem)
-            })
+        rows.append({
+            "stem": stem,
+            "image_path": path,
+            "region_label": get_example_region_label(stem)
+        })
 
     return rows
 
@@ -611,27 +600,8 @@ def main():
         show_intro_page()
         st.stop()
 
-    if "expert_id" not in st.session_state:
-        st.session_state.expert_id = "expert_1"
-
-    expert_options = ["expert_1", "expert_2", "expert_3"]
-
-    result_df = load_existing_result(st.session_state.expert_id)
-    rated_ids = set(result_df["image_id"].tolist())
-
-    total_images = len(df)
-    rated_count = len(rated_ids)
-
-    unrated_df = df[~df["image_id"].isin(rated_ids)]
-
-    if len(unrated_df) == 0:
-        st.success("此評分者已完成所有影像評分。")
-        st.stop()
-
-    current_row = unrated_df.iloc[0]
-    image_id = current_row["image_id"]
-    image_path = current_row["image_path"]
-    region_label = get_region_label(current_row["region"])
+    if "rater_name" not in st.session_state:
+        st.session_state.rater_name = ""
 
     st.title("FFOCT 影像主觀評分系統")
 
@@ -639,23 +609,42 @@ def main():
         "請根據目前顯示的影像進行評分。每個項目皆為 **1 至 5 分**，其中 **1 分代表最差，5 分代表最好**。"
     )
 
-    top_col1, top_col2, top_col3, top_col4 = st.columns([1.15, 1.05, 3.4, 1.35])
+    top_col1, top_col2, top_col3, top_col4 = st.columns([1.20, 1.05, 3.35, 1.35])
 
     with top_col1:
-        selected_expert = st.selectbox(
-            "評分者",
-            expert_options,
-            index=expert_options.index(st.session_state.expert_id)
-        )
+        rater_name = st.text_input(
+            "評分者姓名",
+            value=st.session_state.rater_name,
+            placeholder="請輸入姓名",
+            key="rater_name_input"
+        ).strip()
 
-    if selected_expert != st.session_state.expert_id:
-        st.session_state.expert_id = selected_expert
-        st.rerun()
+    st.session_state.rater_name = rater_name
 
-    result_df = load_existing_result(st.session_state.expert_id)
+    if rater_name == "":
+        result_df = get_empty_result_df()
+    else:
+        result_df = load_existing_result(rater_name)
+
     rated_ids = set(result_df["image_id"].tolist())
+    total_images = len(df)
     rated_count = len(rated_ids)
     progress = rated_count / total_images if total_images > 0 else 0
+
+    unrated_df = df[~df["image_id"].isin(rated_ids)]
+
+    if len(unrated_df) == 0 and rater_name != "":
+        st.success("此評分者已完成所有影像評分。")
+        st.stop()
+
+    if len(unrated_df) == 0:
+        current_row = df.iloc[0]
+    else:
+        current_row = unrated_df.iloc[0]
+
+    image_id = current_row["image_id"]
+    image_path = current_row["image_path"]
+    region_label = get_region_label(current_row["region"])
 
     with top_col2:
         st.markdown("<div class='top-info'>完成進度</div>", unsafe_allow_html=True)
@@ -688,6 +677,8 @@ def main():
             st.error(f"找不到影像：{image_path}")
             st.stop()
 
+    safe_key_name = rater_name if rater_name != "" else "blank"
+
     with right_col:
         st.markdown("### 評分項目")
 
@@ -696,13 +687,13 @@ def main():
         with row1_col1:
             overall_score = score_card(
                 "overall",
-                f"{image_id}_overall"
+                f"{safe_key_name}_{image_id}_overall"
             )
 
         with row1_col2:
             layer_score = score_card(
                 "layer",
-                f"{image_id}_layer"
+                f"{safe_key_name}_{image_id}_layer"
             )
 
         row2_col1, row2_col2 = st.columns(2)
@@ -710,16 +701,20 @@ def main():
         with row2_col1:
             nucleus_score = score_card(
                 "nucleus",
-                f"{image_id}_nucleus"
+                f"{safe_key_name}_{image_id}_nucleus"
             )
 
         with row2_col2:
             artifact_score = score_card(
                 "artifact",
-                f"{image_id}_artifact"
+                f"{safe_key_name}_{image_id}_artifact"
             )
 
     if submit:
+        if rater_name == "":
+            st.warning("請先在左上角輸入評分者姓名。")
+            st.stop()
+
         if (
             overall_score is None or
             layer_score is None or
@@ -730,7 +725,7 @@ def main():
             st.stop()
 
         row_data = {
-            "expert_id": st.session_state.expert_id,
+            "expert_id": rater_name,
             "image_id": current_row["image_id"],
             "region": current_row["region"],
             "case_id": current_row["case_id"],
@@ -742,7 +737,7 @@ def main():
             "artifact_score": artifact_score
         }
 
-        save_rating(row_data, st.session_state.expert_id)
+        save_rating(row_data)
 
         st.success("已儲存，請繼續下一張。")
         st.rerun()
