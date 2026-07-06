@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
+import base64
+import mimetypes
 import pandas as pd
 import streamlit as st
 from PIL import Image
@@ -11,6 +13,9 @@ from supabase import create_client
 # =========================
 MANIFEST_CSV = r"rating_dataset/manifest.csv"
 
+# 第一頁範例影像資料夾
+# 本機位置：G:\app\rating_dataset\example
+# Streamlit Cloud 位置：rating_dataset/example
 EXAMPLE_DIR = r"rating_dataset/example"
 
 VALID_EXT = [".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff"]
@@ -333,7 +338,7 @@ def inject_css():
         }
 
         .intro-text {
-            margin-bottom: 0.75rem !important;
+            margin-bottom: 0.8rem !important;
         }
 
         .reference-badge,
@@ -347,7 +352,22 @@ def inject_css():
             font-weight: 600;
             color: #111111 !important;
             margin-top: 0rem !important;
-            margin-bottom: 10px !important;
+            margin-bottom: 8px !important;
+        }
+
+        .example-box {
+            min-height: 170px;
+            margin-bottom: 0.85rem;
+        }
+
+        .example-original-img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-top: 0px;
+            margin-bottom: 0.6rem;
+            background-color: transparent;
         }
 
         .score-subtitle {
@@ -453,6 +473,10 @@ def inject_css():
                 padding-left: 0.7rem !important;
                 padding-right: 0.7rem !important;
             }
+
+            .example-box {
+                min-height: auto;
+            }
         }
         </style>
         """,
@@ -476,6 +500,36 @@ def find_image_by_stem(folder, stem):
         if os.path.exists(candidate):
             return candidate
     return None
+
+
+def image_to_base64(image_path):
+    with open(image_path, "rb") as f:
+        return base64.b64encode(f.read()).decode("utf-8")
+
+
+def get_mime_type(image_path):
+    mime_type, _ = mimetypes.guess_type(image_path)
+    if mime_type is None:
+        return "image/png"
+    return mime_type
+
+
+def show_example_image_original(image_path):
+    """
+    第一頁 example 專用：
+    保留原圖尺寸，不主動放大。
+    若圖片寬度超過欄位，才用 max-width:100% 防止破版。
+    """
+    img_b64 = image_to_base64(image_path)
+    mime_type = get_mime_type(image_path)
+
+    st.markdown(
+        f"""
+        <img class="example-original-img"
+             src="data:{mime_type};base64,{img_b64}">
+        """,
+        unsafe_allow_html=True
+    )
 
 
 # =========================
@@ -529,6 +583,8 @@ def show_intro_page():
 
         for col, row in zip(cols, example_rows[start_idx:start_idx + cols_per_row]):
             with col:
+                st.markdown("<div class='example-box'>", unsafe_allow_html=True)
+
                 st.markdown(
                     f"<div class='reference-badge'>部位：{row['region_label']}</div>",
                     unsafe_allow_html=True
@@ -537,12 +593,11 @@ def show_intro_page():
                 image_path = row["image_path"]
 
                 if image_path is not None and os.path.exists(image_path):
-                    img = Image.open(image_path)
-                    show_image_responsive(img)
+                    show_example_image_original(image_path)
                 else:
                     st.warning(f"缺少範例影像：{row['stem']}")
 
-                st.markdown("<div style='height: 0.3rem;'></div>", unsafe_allow_html=True)
+                st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("<div style='height: 0.25rem;'></div>", unsafe_allow_html=True)
 
