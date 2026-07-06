@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-import base64
-import mimetypes
 import pandas as pd
 import streamlit as st
 from PIL import Image
@@ -12,12 +10,7 @@ from supabase import create_client
 # 檔案設定
 # =========================
 MANIFEST_CSV = r"rating_dataset/manifest.csv"
-
-# 第一頁範例影像資料夾
-# 本機位置：G:\app\rating_dataset\example
-# Streamlit Cloud 位置：rating_dataset/example
 EXAMPLE_DIR = r"rating_dataset/example"
-
 VALID_EXT = [".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff"]
 
 
@@ -356,33 +349,6 @@ def inject_css():
             margin-bottom: 6px !important;
         }
 
-        .example-grid {
-            display: grid;
-            grid-template-columns: repeat(3, max-content);
-            column-gap: 28px;
-            row-gap: 12px;
-            align-items: start;
-            justify-content: start;
-            margin-top: 0.45rem;
-        }
-
-        .example-tile {
-            display: block;
-            margin: 0;
-            padding: 0;
-        }
-
-        .example-original-img {
-            display: block;
-            width: auto;
-            height: auto;
-            max-width: 100%;
-            border-radius: 8px;
-            background-color: transparent;
-            margin: 0;
-            padding: 0;
-        }
-
         .score-subtitle {
             font-weight: 700;
             margin-top: 0rem;
@@ -482,21 +448,9 @@ def inject_css():
 
         @media (max-width: 900px) {
             .block-container {
-                padding-top: 2.8rem !important;
+                padding-top: 3.0rem !important;
                 padding-left: 0.7rem !important;
                 padding-right: 0.7rem !important;
-            }
-
-            .example-grid {
-                grid-template-columns: repeat(2, max-content);
-                column-gap: 18px;
-                row-gap: 12px;
-            }
-        }
-
-        @media (max-width: 560px) {
-            .example-grid {
-                grid-template-columns: repeat(1, max-content);
             }
         }
         </style>
@@ -516,10 +470,6 @@ def show_image_responsive(img, caption=None):
 
 
 def show_image_original(img, caption=None):
-    """
-    正式評分頁影像專用：
-    用原圖尺寸呈現，不強制放大。
-    """
     st.image(img, caption=caption)
 
 
@@ -529,35 +479,6 @@ def find_image_by_stem(folder, stem):
         if os.path.exists(candidate):
             return candidate
     return None
-
-
-def image_to_base64(image_path):
-    with open(image_path, "rb") as f:
-        return base64.b64encode(f.read()).decode("utf-8")
-
-
-def get_mime_type(image_path):
-    mime_type, _ = mimetypes.guess_type(image_path)
-    if mime_type is None:
-        return "image/png"
-    return mime_type
-
-
-def show_example_image_original(image_path):
-    """
-    第一頁 example 專用：
-    保留原圖尺寸，不主動放大。
-    """
-    img_b64 = image_to_base64(image_path)
-    mime_type = get_mime_type(image_path)
-
-    st.markdown(
-        f"""
-        <img class="example-original-img"
-             src="data:{mime_type};base64,{img_b64}">
-        """,
-        unsafe_allow_html=True
-    )
 
 
 # =========================
@@ -604,38 +525,34 @@ def show_intro_page():
         st.warning(f"找不到範例資料夾：{EXAMPLE_DIR}")
         st.info("請建立資料夾 rating_dataset/example，並放入 hand1-hand5、face1-face4 的圖片。")
 
-    html_parts = ["<div class='example-grid'>"]
+    cols_per_row = 3
 
-    for row in example_rows:
-        html_parts.append("<div class='example-tile'>")
-        html_parts.append(
-            f"<div class='reference-badge'>部位：{row['region_label']}</div>"
-        )
+    for start_idx in range(0, len(example_rows), cols_per_row):
+        cols = st.columns(cols_per_row)
 
-        image_path = row["image_path"]
+        for col, row in zip(cols, example_rows[start_idx:start_idx + cols_per_row]):
+            with col:
+                st.markdown(
+                    f"<div class='reference-badge'>部位：{row['region_label']}</div>",
+                    unsafe_allow_html=True
+                )
 
-        if image_path is not None and os.path.exists(image_path):
-            img_b64 = image_to_base64(image_path)
-            mime_type = get_mime_type(image_path)
-            html_parts.append(
-                f"<img class='example-original-img' src='data:{mime_type};base64,{img_b64}'>"
-            )
-        else:
-            html_parts.append(
-                f"<div style='color:#b00020;font-weight:600;'>缺少範例影像：{row['stem']}</div>"
-            )
+                image_path = row["image_path"]
 
-        html_parts.append("</div>")
+                if image_path is not None and os.path.exists(image_path):
+                    img = Image.open(image_path)
+                    show_image_original(img)
+                else:
+                    st.warning(f"缺少範例影像：{row['stem']}")
 
-    html_parts.append("</div>")
+                st.markdown("<div style='height: 0.35rem;'></div>", unsafe_allow_html=True)
 
-    st.markdown("\n".join(html_parts), unsafe_allow_html=True)
+    st.markdown("<div style='height: 0.35rem;'></div>", unsafe_allow_html=True)
 
-    st.markdown("<div style='height: 0.55rem;'></div>", unsafe_allow_html=True)
-
-    col_left, col_mid, col_right = st.columns([2, 1.2, 2])
-
-    with col_mid:
+    # 按鈕放到右邊中間
+    btn_left, btn_right = st.columns([4.6, 1.5])
+    with btn_right:
+        st.markdown("<div style='height: 1.2rem;'></div>", unsafe_allow_html=True)
         if st.button("我已看完參考影像，開始評分"):
             st.session_state.intro_done = True
             st.rerun()
@@ -696,7 +613,7 @@ def main():
         "請根據目前顯示的影像進行評分。每個項目皆為 **1 至 5 分**，其中 **1 分代表最差，5 分代表最好**。"
     )
 
-    top_col1, top_col2, top_col3, top_col4 = st.columns([1.20, 1.05, 3.35, 1.35])
+    top_col1, top_col2, top_col3, top_col4 = st.columns([1.20, 1.05, 3.00, 1.35])
 
     with top_col1:
         rater_name = st.text_input(
@@ -746,7 +663,7 @@ def main():
         st.markdown("<br>", unsafe_allow_html=True)
         submit = st.button("儲存並前往下一張")
 
-    left_col, right_col = st.columns([1.00, 3.35])
+    left_col, right_col = st.columns([1.20, 3.10])
 
     with left_col:
         if os.path.exists(image_path):
@@ -759,8 +676,10 @@ def main():
             st.caption(f"原始尺寸：{img.width} × {img.height}")
             st.markdown("<div style='height: 2px;'></div>", unsafe_allow_html=True)
 
-            # 正式評分頁：原圖大小呈現，不強制放大
-            show_image_original(img, caption=image_id)
+            # 影像往左側區塊中間一點
+            pad_l, img_col, pad_r = st.columns([0.12, 0.76, 0.12])
+            with img_col:
+                show_image_original(img, caption=image_id)
 
         else:
             st.error(f"找不到影像：{image_path}")
