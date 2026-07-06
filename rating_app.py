@@ -248,7 +248,7 @@ def inject_css():
         }
 
         .block-container {
-            padding-top: 3.4rem !important;
+            padding-top: 2.6rem !important;
             padding-bottom: 0.8rem !important;
             padding-left: 1.2rem !important;
             padding-right: 1.2rem !important;
@@ -271,22 +271,22 @@ def inject_css():
 
         h1 {
             font-size: clamp(1.55rem, 2vw, 1.95rem) !important;
-            margin-top: 0.2rem !important;
-            margin-bottom: 0.45rem !important;
+            margin-top: 0.1rem !important;
+            margin-bottom: 0.35rem !important;
             line-height: 1.25 !important;
         }
 
         h2 {
-            font-size: clamp(1.22rem, 1.7vw, 1.45rem) !important;
-            margin-top: 0.25rem !important;
-            margin-bottom: 0.20rem !important;
+            font-size: clamp(1.18rem, 1.6vw, 1.42rem) !important;
+            margin-top: 0.18rem !important;
+            margin-bottom: 0.16rem !important;
             line-height: 1.25 !important;
         }
 
         h3 {
-            font-size: clamp(1.10rem, 1.4vw, 1.28rem) !important;
-            margin-top: 0.20rem !important;
-            margin-bottom: 0.20rem !important;
+            font-size: clamp(1.08rem, 1.35vw, 1.25rem) !important;
+            margin-top: 0.14rem !important;
+            margin-bottom: 0.16rem !important;
             line-height: 1.25 !important;
         }
 
@@ -299,9 +299,9 @@ def inject_css():
 
         p {
             margin-top: 0rem !important;
-            margin-bottom: 0.18rem !important;
+            margin-bottom: 0.16rem !important;
             font-size: clamp(0.92rem, 1.1vw, 1.04rem) !important;
-            line-height: 1.45 !important;
+            line-height: 1.40 !important;
         }
 
         .top-info {
@@ -338,7 +338,8 @@ def inject_css():
         }
 
         .intro-text {
-            margin-bottom: 0.8rem !important;
+            margin-bottom: 0.55rem !important;
+            line-height: 1.42 !important;
         }
 
         .reference-badge,
@@ -352,22 +353,34 @@ def inject_css():
             font-weight: 600;
             color: #111111 !important;
             margin-top: 0rem !important;
-            margin-bottom: 8px !important;
+            margin-bottom: 6px !important;
         }
 
-        .example-box {
-            min-height: 170px;
-            margin-bottom: 0.85rem;
+        .example-grid {
+            display: grid;
+            grid-template-columns: repeat(3, max-content);
+            column-gap: 28px;
+            row-gap: 12px;
+            align-items: start;
+            justify-content: start;
+            margin-top: 0.45rem;
+        }
+
+        .example-tile {
+            display: block;
+            margin: 0;
+            padding: 0;
         }
 
         .example-original-img {
             display: block;
-            max-width: 100%;
+            width: auto;
             height: auto;
+            max-width: 100%;
             border-radius: 8px;
-            margin-top: 0px;
-            margin-bottom: 0.6rem;
             background-color: transparent;
+            margin: 0;
+            padding: 0;
         }
 
         .score-subtitle {
@@ -469,13 +482,21 @@ def inject_css():
 
         @media (max-width: 900px) {
             .block-container {
-                padding-top: 3.0rem !important;
+                padding-top: 2.8rem !important;
                 padding-left: 0.7rem !important;
                 padding-right: 0.7rem !important;
             }
 
-            .example-box {
-                min-height: auto;
+            .example-grid {
+                grid-template-columns: repeat(2, max-content);
+                column-gap: 18px;
+                row-gap: 12px;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .example-grid {
+                grid-template-columns: repeat(1, max-content);
             }
         }
         </style>
@@ -492,6 +513,14 @@ def show_image_responsive(img, caption=None):
         st.image(img, caption=caption, use_container_width=True)
     except TypeError:
         st.image(img, caption=caption, use_column_width=True)
+
+
+def show_image_original(img, caption=None):
+    """
+    正式評分頁影像專用：
+    用原圖尺寸呈現，不強制放大。
+    """
+    st.image(img, caption=caption)
 
 
 def find_image_by_stem(folder, stem):
@@ -518,7 +547,6 @@ def show_example_image_original(image_path):
     """
     第一頁 example 專用：
     保留原圖尺寸，不主動放大。
-    若圖片寬度超過欄位，才用 max-width:100% 防止破版。
     """
     img_b64 = image_to_base64(image_path)
     mime_type = get_mime_type(image_path)
@@ -576,30 +604,34 @@ def show_intro_page():
         st.warning(f"找不到範例資料夾：{EXAMPLE_DIR}")
         st.info("請建立資料夾 rating_dataset/example，並放入 hand1-hand5、face1-face4 的圖片。")
 
-    cols_per_row = 3
+    html_parts = ["<div class='example-grid'>"]
 
-    for start_idx in range(0, len(example_rows), cols_per_row):
-        cols = st.columns(cols_per_row)
+    for row in example_rows:
+        html_parts.append("<div class='example-tile'>")
+        html_parts.append(
+            f"<div class='reference-badge'>部位：{row['region_label']}</div>"
+        )
 
-        for col, row in zip(cols, example_rows[start_idx:start_idx + cols_per_row]):
-            with col:
-                st.markdown("<div class='example-box'>", unsafe_allow_html=True)
+        image_path = row["image_path"]
 
-                st.markdown(
-                    f"<div class='reference-badge'>部位：{row['region_label']}</div>",
-                    unsafe_allow_html=True
-                )
+        if image_path is not None and os.path.exists(image_path):
+            img_b64 = image_to_base64(image_path)
+            mime_type = get_mime_type(image_path)
+            html_parts.append(
+                f"<img class='example-original-img' src='data:{mime_type};base64,{img_b64}'>"
+            )
+        else:
+            html_parts.append(
+                f"<div style='color:#b00020;font-weight:600;'>缺少範例影像：{row['stem']}</div>"
+            )
 
-                image_path = row["image_path"]
+        html_parts.append("</div>")
 
-                if image_path is not None and os.path.exists(image_path):
-                    show_example_image_original(image_path)
-                else:
-                    st.warning(f"缺少範例影像：{row['stem']}")
+    html_parts.append("</div>")
 
-                st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("\n".join(html_parts), unsafe_allow_html=True)
 
-    st.markdown("<div style='height: 0.25rem;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 0.55rem;'></div>", unsafe_allow_html=True)
 
     col_left, col_mid, col_right = st.columns([2, 1.2, 2])
 
@@ -726,7 +758,9 @@ def main():
             )
             st.caption(f"原始尺寸：{img.width} × {img.height}")
             st.markdown("<div style='height: 2px;'></div>", unsafe_allow_html=True)
-            show_image_responsive(img, caption=image_id)
+
+            # 正式評分頁：原圖大小呈現，不強制放大
+            show_image_original(img, caption=image_id)
 
         else:
             st.error(f"找不到影像：{image_path}")
