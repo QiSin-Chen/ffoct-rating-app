@@ -43,8 +43,8 @@ def get_region_label(region):
 # =========================
 # Example 參考影像設定
 # =========================
-# 目前支援 G:\app\rating_dataset\example 內這 12 張：
-# face1-face3、hand1-hand3、SSOCT1-SSOCT2、偽影1-偽影2、facelayer1、handlayer1
+# 目前支援 G:\app\rating_dataset\example 內這 15 張：
+# face1-face3、hand1-hand3、SSOCT1-SSOCT3、偽影1-偽影3、facelayer1、handlayer1-handlayer2
 EXAMPLE_GROUPS = [
     {
         "group_title": "真實 FFOCT：臉部皮膚範例",
@@ -70,6 +70,7 @@ EXAMPLE_GROUPS = [
         "items": [
             {"stem": "SSOCT1", "badge": "類型：SSOCT"},
             {"stem": "SSOCT2", "badge": "類型：SSOCT"},
+            {"stem": "SSOCT3", "badge": "類型：SSOCT"},
         ],
     },
     {
@@ -78,14 +79,16 @@ EXAMPLE_GROUPS = [
         "items": [
             {"stem": "偽影1", "badge": "類型：偽影範例"},
             {"stem": "偽影2", "badge": "類型：偽影範例"},
+            {"stem": "偽影3", "badge": "類型：偽影範例"},
         ],
     },
     {
         "group_title": "FFOCT 皮膚層結構參考",
-        "group_note": "層次判讀：角質層為第一層，表皮層為第二層，真皮層為第三層；評分重點為表皮層與真皮層邊界是否清楚、連續且位置合理。",
+        "group_note": "觀察角質層、表皮層與真皮層的層次分布，並注意表皮層與真皮層邊界是否清楚、連續且位置合理。",
         "items": [
             {"stem": "facelayer1", "badge": "層次：臉部皮膚"},
             {"stem": "handlayer1", "badge": "層次：手部皮膚"},
+            {"stem": "handlayer2", "badge": "層次：手部皮膚"},
         ],
     },
 ]
@@ -596,7 +599,7 @@ def show_intro_page():
 
     if not os.path.isdir(EXAMPLE_DIR):
         st.warning(f"找不到範例資料夾：{EXAMPLE_DIR}")
-        st.info("請建立資料夾 rating_dataset/example，並放入 face1-face3、hand1-hand3、SSOCT1-SSOCT2、偽影1-偽影2、facelayer1、handlayer1。")
+        st.info("請建立資料夾 rating_dataset/example，並放入 face1-face3、hand1-hand3、SSOCT1-SSOCT3、偽影1-偽影3、facelayer1、handlayer1-handlayer2。")
 
     example_groups = get_example_groups()
 
