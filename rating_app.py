@@ -40,16 +40,55 @@ def get_region_label(region):
     return REGION_LABELS.get(region, str(region))
 
 
-def get_example_region_label(filename_stem):
-    name = filename_stem.lower()
-
-    if name.startswith("hand"):
-        return "手部皮膚"
-
-    if name.startswith("face"):
-        return "臉部皮膚"
-
-    return "皮膚影像"
+# =========================
+# Example 參考影像設定
+# =========================
+# 目前支援 G:\app\rating_dataset\example 內這 12 張：
+# face1-face3、hand1-hand3、SSOCT1-SSOCT2、偽影1-偽影2、facelayer1、handlayer1
+EXAMPLE_GROUPS = [
+    {
+        "group_title": "真實 FFOCT：臉部皮膚範例",
+        "group_note": "觀察臉部皮膚在真實 FFOCT 中的整體外觀、層狀結構與微結構分布。",
+        "items": [
+            {"stem": "face1", "badge": "部位：臉部皮膚"},
+            {"stem": "face2", "badge": "部位：臉部皮膚"},
+            {"stem": "face3", "badge": "部位：臉部皮膚"},
+        ],
+    },
+    {
+        "group_title": "真實 FFOCT：手部皮膚範例",
+        "group_note": "觀察手部皮膚在真實 FFOCT 中的表面形態、皮膚厚度與影像紋理。",
+        "items": [
+            {"stem": "hand1", "badge": "部位：手部皮膚"},
+            {"stem": "hand2", "badge": "部位：手部皮膚"},
+            {"stem": "hand3", "badge": "部位：手部皮膚"},
+        ],
+    },
+    {
+        "group_title": "SSOCT 外觀參考",
+        "group_note": "SSOCT 影像通常較接近深層掃描外觀，與真實 FFOCT 的高解析表面微結構不同。",
+        "items": [
+            {"stem": "SSOCT1", "badge": "類型：SSOCT"},
+            {"stem": "SSOCT2", "badge": "類型：SSOCT"},
+        ],
+    },
+    {
+        "group_title": "偽影與異常生成參考",
+        "group_note": "評分時請注意明顯條紋、斷裂、非自然亮暗變化、錯誤紋理或亂生成結構。",
+        "items": [
+            {"stem": "偽影1", "badge": "類型：偽影範例"},
+            {"stem": "偽影2", "badge": "類型：偽影範例"},
+        ],
+    },
+    {
+        "group_title": "FFOCT 皮膚層結構參考",
+        "group_note": "層次判讀：角質層為第一層，表皮層為第二層，真皮層為第三層；評分重點為表皮層與真皮層邊界是否清楚、連續且位置合理。",
+        "items": [
+            {"stem": "facelayer1", "badge": "層次：臉部皮膚"},
+            {"stem": "handlayer1", "badge": "層次：手部皮膚"},
+        ],
+    },
+]
 
 
 # =========================
@@ -60,7 +99,7 @@ RATING_ITEMS = {
         "title": "1. FFOCT-like appearance",
         "subtitle": "整體是否像真實 FFOCT 影像",
         "options": {
-            1: "1：完全不像 FFOCT，仍呈現明顯 SSOCT 或雜訊外觀。",
+            1: "1：完全不像 FFOCT。",
             2: "2：僅少部分區域具有 FFOCT-like 特徵。",
             3: "3：中等程度接近 FFOCT，但仍可見明顯差異。",
             4: "4：多數區域接近 FFOCT 外觀。",
@@ -68,14 +107,14 @@ RATING_ITEMS = {
         }
     },
     "layer": {
-        "title": "2. Skin layer visibility",
-        "subtitle": "皮膚層狀結構是否清楚",
+        "title": "2. Epidermis–dermis boundary visibility",
+        "subtitle": "表皮層與真皮層邊界是否清楚、連續且位置合理",
         "options": {
-            1: "1：幾乎無法辨識皮膚層。",
-            2: "2：僅可粗略看到表面或單一層次。",
-            3: "3：可辨識部分皮膚層，但邊界不穩定或不連續。",
-            4: "4：多數皮膚層可清楚辨識，僅局部模糊。",
-            5: "5：皮膚層結構清楚、連續，具有良好判讀性。"
+            1: "1：幾乎無法辨識表皮層與真皮層之間的邊界位置。",
+            2: "2：僅可粗略看到疑似邊界，但位置不明確或判讀困難。",
+            3: "3：可辨識部分表皮–真皮邊界，但邊界不連續、模糊或位置不穩定。",
+            4: "4：大多數區域可清楚辨識表皮–真皮邊界，僅局部模糊或中斷。",
+            5: "5：表皮–真皮邊界清楚、連續，位置合理，具有良好判讀性。"
         }
     },
     "nucleus": {
@@ -335,6 +374,33 @@ def inject_css():
             line-height: 1.42 !important;
         }
 
+        .intro-layer-note {
+            display: inline-block;
+            padding: 8px 12px;
+            border-left: 4px solid #777777;
+            background-color: #f7f7f7;
+            border-radius: 6px;
+            font-size: clamp(0.86rem, 0.95vw, 0.96rem);
+            line-height: 1.45;
+            margin-top: 0.25rem;
+            margin-bottom: 0.45rem;
+        }
+
+        .example-section-title {
+            font-size: clamp(1.00rem, 1.12vw, 1.12rem);
+            font-weight: 700;
+            margin-top: 0.65rem;
+            margin-bottom: 0.10rem;
+            color: #111111 !important;
+        }
+
+        .example-section-note {
+            font-size: clamp(0.84rem, 0.95vw, 0.95rem);
+            color: #555555 !important;
+            margin-bottom: 0.32rem;
+            line-height: 1.38;
+        }
+
         .reference-badge,
         .region-badge {
             display: inline-block;
@@ -347,6 +413,10 @@ def inject_css():
             color: #111111 !important;
             margin-top: 0rem !important;
             margin-bottom: 6px !important;
+        }
+
+        [data-testid="stImage"] img {
+            border-radius: 8px !important;
         }
 
         .score-subtitle {
@@ -438,10 +508,6 @@ def inject_css():
             color: #6b7280 !important;
         }
 
-        [data-testid="stImage"] img {
-            border-radius: 8px !important;
-        }
-
         div[data-testid="stVerticalBlock"] {
             gap: 0.28rem !important;
         }
@@ -462,13 +528,6 @@ def inject_css():
 # =========================
 # 圖片顯示工具
 # =========================
-def show_image_responsive(img, caption=None):
-    try:
-        st.image(img, caption=caption, use_container_width=True)
-    except TypeError:
-        st.image(img, caption=caption, use_column_width=True)
-
-
 def show_image_original(img, caption=None):
     st.image(img, caption=caption)
 
@@ -484,24 +543,49 @@ def find_image_by_stem(folder, stem):
 # =========================
 # 第一頁：固定 example 範例影像
 # =========================
-def get_example_images():
-    ordered_stems = [
-        "hand1", "hand2", "hand3", "hand4", "hand5",
-        "face1", "face2", "face3", "face4"
-    ]
+def get_example_groups():
+    groups = []
 
-    rows = []
+    for group in EXAMPLE_GROUPS:
+        items = []
+        for item in group["items"]:
+            stem = item["stem"]
+            path = find_image_by_stem(EXAMPLE_DIR, stem)
+            items.append({
+                "stem": stem,
+                "image_path": path,
+                "badge": item["badge"]
+            })
 
-    for stem in ordered_stems:
-        path = find_image_by_stem(EXAMPLE_DIR, stem)
-
-        rows.append({
-            "stem": stem,
-            "image_path": path,
-            "region_label": get_example_region_label(stem)
+        groups.append({
+            "group_title": group["group_title"],
+            "group_note": group["group_note"],
+            "items": items
         })
 
-    return rows
+    return groups
+
+
+def render_example_items(items, cols_per_row=3):
+    for start_idx in range(0, len(items), cols_per_row):
+        cols = st.columns(cols_per_row)
+
+        for col, item in zip(cols, items[start_idx:start_idx + cols_per_row]):
+            with col:
+                st.markdown(
+                    f"<div class='reference-badge'>{item['badge']}</div>",
+                    unsafe_allow_html=True
+                )
+
+                image_path = item["image_path"]
+
+                if image_path is not None and os.path.exists(image_path):
+                    img = Image.open(image_path)
+                    show_image_original(img)
+                else:
+                    st.warning(f"缺少範例影像：{item['stem']}")
+
+                st.markdown("<div style='height: 0.20rem;'></div>", unsafe_allow_html=True)
 
 
 def show_intro_page():
@@ -509,47 +593,39 @@ def show_intro_page():
 
     st.markdown(
         """
-### 評分前參考：真實 FFOCT 影像範例
+### 評分前參考：真實 FFOCT 與常見判讀範例
 
 <div class="intro-text">
-以下影像為真實 FFOCT 影像，請先觀察其整體外觀、皮膚層狀結構、細胞核樣微結構與影像自然程度。<br>
-看完後請按下方按鈕開始正式評分。
+以下影像包含真實 FFOCT 的臉部與手部範例、SSOCT 外觀參考、偽影範例，以及皮膚層結構參考。<br>
+請先觀察其整體外觀、表皮–真皮邊界、細胞核樣微結構與影像自然程度，再開始正式評分。
+</div>
+
+<div class="intro-layer-note">
+<b>皮膚層次說明：</b>角質層為第一層，表皮層為第二層，真皮層為第三層；本評分系統的 layer 項目主要評估<b>表皮層與真皮層邊界</b>是否清楚、連續且位置合理。
 </div>
         """,
         unsafe_allow_html=True
     )
 
-    example_rows = get_example_images()
-
     if not os.path.isdir(EXAMPLE_DIR):
         st.warning(f"找不到範例資料夾：{EXAMPLE_DIR}")
-        st.info("請建立資料夾 rating_dataset/example，並放入 hand1-hand5、face1-face4 的圖片。")
+        st.info("請建立資料夾 rating_dataset/example，並放入 face1-face3、hand1-hand3、SSOCT1-SSOCT2、偽影1-偽影2、facelayer1、handlayer1。")
 
-    cols_per_row = 3
+    example_groups = get_example_groups()
 
-    for start_idx in range(0, len(example_rows), cols_per_row):
-        cols = st.columns(cols_per_row)
-
-        for col, row in zip(cols, example_rows[start_idx:start_idx + cols_per_row]):
-            with col:
-                st.markdown(
-                    f"<div class='reference-badge'>部位：{row['region_label']}</div>",
-                    unsafe_allow_html=True
-                )
-
-                image_path = row["image_path"]
-
-                if image_path is not None and os.path.exists(image_path):
-                    img = Image.open(image_path)
-                    show_image_original(img)
-                else:
-                    st.warning(f"缺少範例影像：{row['stem']}")
-
-                st.markdown("<div style='height: 0.35rem;'></div>", unsafe_allow_html=True)
+    for group in example_groups:
+        st.markdown(
+            f"<div class='example-section-title'>{group['group_title']}</div>",
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            f"<div class='example-section-note'>{group['group_note']}</div>",
+            unsafe_allow_html=True
+        )
+        render_example_items(group["items"], cols_per_row=3)
 
     st.markdown("<div style='height: 0.35rem;'></div>", unsafe_allow_html=True)
 
-    # 按鈕放到右邊中間
     btn_left, btn_right = st.columns([4.6, 1.5])
     with btn_right:
         st.markdown("<div style='height: 1.2rem;'></div>", unsafe_allow_html=True)
@@ -676,7 +752,6 @@ def main():
             st.caption(f"原始尺寸：{img.width} × {img.height}")
             st.markdown("<div style='height: 2px;'></div>", unsafe_allow_html=True)
 
-            # 影像往左側區塊中間一點
             pad_l, img_col, pad_r = st.columns([0.12, 0.76, 0.12])
             with img_col:
                 show_image_original(img, caption=image_id)

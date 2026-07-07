@@ -1,7 +1,24 @@
 # -*- coding: utf-8 -*-
+"""
+建立 FFOCT 主觀評分系統用 manifest.csv
+
+目前資料設定：
+- 部位：face、hand
+- face：10 cases
+- hand：10 cases
+- 每個 case 有 5 種影像來源：SSOCT、CycleGAN、FUSRGAN、OUR、FFOCT
+- 總影像數：20 cases × 5 methods = 100 張
+
+輸出：
+G:\\app\\rating_dataset\\manifest.csv
+
+manifest 會隨機打亂影像順序，並重新編碼為 Image_001 ~ Image_100。
+"""
+
 import os
 import random
 import pandas as pd
+
 
 # =========================
 # 路徑設定
@@ -9,10 +26,22 @@ import pandas as pd
 DATASET_ROOT = r"G:\app\rating_dataset"
 OUTPUT_CSV = os.path.join(DATASET_ROOT, "manifest.csv")
 
+# 固定隨機種子，確保每次產生的順序一致
+RANDOM_SEED = 1208
+
+# 支援圖片副檔名
+VALID_EXT = [".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff"]
+
+# 五種要評分的影像來源
+METHODS = ["SSOCT", "CycleGAN", "FUSRGAN", "OUR", "FFOCT"]
+
+# =========================
+# 資料設定：face 10、hand 10
+# =========================
 REGIONS = {
     "face": {
         "folder": "face",
-        "count": 30,
+        "count": 10,
         "name_patterns": {
             "SSOCT": [
                 "SSOCT{n}", "ssoct{n}",
@@ -69,19 +98,13 @@ REGIONS = {
     }
 }
 
-METHODS = ["SSOCT", "CycleGAN", "FUSRGAN", "OUR", "FFOCT"]
-VALID_EXT = [".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff"]
-RANDOM_SEED = 1208
-
 
 def find_image(region_dir, stems):
     """
-    允許圖片放在：
-    rating_dataset/face/
-    rating_dataset/face/case001/
-    rating_dataset/face/case002/
-    ...
-    所以這裡會遞迴搜尋。
+    遞迴搜尋影像。
+    支援以下兩種放法：
+    1. rating_dataset/face/fusrganface1.jpg
+    2. rating_dataset/face/case001/fusrganface1.jpg
     """
     for stem in stems:
         for root, _, files in os.walk(region_dir):
@@ -96,10 +119,11 @@ def find_image(region_dir, stems):
 
 def to_relative_path(abs_path):
     """
-    Streamlit Cloud 不能用 G:\\...
-    所以 manifest 裡存成 rating_dataset/...
+    Streamlit Cloud 不能使用 G:\\... 絕對路徑，
+    因此 manifest 內存成 rating_dataset/... 相對路徑。
     """
-    rel = os.path.relpath(abs_path, start=os.path.dirname(DATASET_ROOT))
+    app_root = os.path.dirname(DATASET_ROOT)  # G:\app
+    rel = os.path.relpath(abs_path, start=app_root)
     return rel.replace("\\", "/")
 
 
@@ -131,7 +155,7 @@ def main():
                         "case_number": case_number,
                         "case_id": case_id,
                         "method": method,
-                        "expected_names": stems
+                        "expected_names": "; ".join(stems)
                     })
                     continue
 
@@ -147,8 +171,10 @@ def main():
         print("沒有找到任何影像，請確認資料夾與檔名。")
         return
 
+    # 隨機打亂全部影像
     random.shuffle(rows)
 
+    # 產生匿名影像 ID
     for idx, row in enumerate(rows, start=1):
         row["image_id"] = f"Image_{idx:03d}"
 
@@ -157,19 +183,29 @@ def main():
 
     df.to_csv(OUTPUT_CSV, index=False, encoding="utf-8-sig")
 
-    print(f"完成：{OUTPUT_CSV}")
+    print("==============================")
+    print("manifest.csv 已建立完成")
+    print("==============================")
+    print(f"輸出位置：{OUTPUT_CSV}")
     print(f"總影像數：{len(df)}")
     print()
-    print("各方法數量：")
-    print(df["method"].value_counts())
+    print("各方法影像數：")
+    print(df["method"].value_counts().reindex(METHODS, fill_value=0))
     print()
-    print("各部位數量：")
+    print("各部位影像數：")
     print(df["region"].value_counts())
     print()
+
+    expected_total = sum(cfg["count"] for cfg in REGIONS.values()) * len(METHODS)
+    if len(df) == expected_total:
+        print(f"數量正確：{len(df)} / {expected_total}")
+    else:
+        print(f"[Warning] 數量不完整：{len(df)} / {expected_total}")
 
     if len(missing) > 0:
         missing_csv = os.path.join(DATASET_ROOT, "missing_images.csv")
         pd.DataFrame(missing).to_csv(missing_csv, index=False, encoding="utf-8-sig")
+        print()
         print(f"[Warning] 有缺少影像，已輸出：{missing_csv}")
         print(f"缺少數量：{len(missing)}")
     else:
