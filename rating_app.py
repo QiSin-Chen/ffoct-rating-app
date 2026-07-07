@@ -374,31 +374,21 @@ def inject_css():
             line-height: 1.42 !important;
         }
 
-        .intro-layer-note {
-            display: inline-block;
-            padding: 8px 12px;
-            border-left: 4px solid #777777;
-            background-color: #f7f7f7;
-            border-radius: 6px;
-            font-size: clamp(0.86rem, 0.95vw, 0.96rem);
-            line-height: 1.45;
-            margin-top: 0.25rem;
-            margin-bottom: 0.45rem;
-        }
-
         .example-section-title {
-            font-size: clamp(1.00rem, 1.12vw, 1.12rem);
+            font-size: clamp(1.02rem, 1.12vw, 1.14rem);
             font-weight: 700;
-            margin-top: 0.65rem;
-            margin-bottom: 0.10rem;
+            margin-top: 0.85rem;
+            margin-bottom: 0.18rem;
             color: #111111 !important;
+            line-height: 1.30 !important;
         }
 
         .example-section-note {
             font-size: clamp(0.84rem, 0.95vw, 0.95rem);
             color: #555555 !important;
-            margin-bottom: 0.32rem;
-            line-height: 1.38;
+            margin-top: 0rem;
+            margin-bottom: 0.55rem;
+            line-height: 1.50 !important;
         }
 
         .reference-badge,
@@ -600,9 +590,6 @@ def show_intro_page():
 請先觀察其整體外觀、表皮–真皮邊界、細胞核樣微結構與影像自然程度，再開始正式評分。
 </div>
 
-<div class="intro-layer-note">
-<b>皮膚層次說明：</b>角質層為第一層，表皮層為第二層，真皮層為第三層；本評分系統的 layer 項目主要評估<b>表皮層與真皮層邊界</b>是否清楚、連續且位置合理。
-</div>
         """,
         unsafe_allow_html=True
     )
@@ -622,6 +609,7 @@ def show_intro_page():
             f"<div class='example-section-note'>{group['group_note']}</div>",
             unsafe_allow_html=True
         )
+        st.markdown("<div style='height: 0.10rem;'></div>", unsafe_allow_html=True)
         render_example_items(group["items"], cols_per_row=3)
 
     st.markdown("<div style='height: 0.35rem;'></div>", unsafe_allow_html=True)
