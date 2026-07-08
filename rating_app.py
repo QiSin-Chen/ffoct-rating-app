@@ -754,7 +754,7 @@ def main():
         st.markdown("<br>", unsafe_allow_html=True)
         submit = st.button("儲存並前往下一張")
 
-    left_col, right_col = st.columns([1.20, 3.10])
+    left_col, right_col = st.columns([1.45, 3.00])
 
     with left_col:
         if os.path.exists(image_path):
@@ -767,9 +767,10 @@ def main():
             st.caption(f"原始尺寸：{img.width} × {img.height}")
             st.markdown("<div style='height: 2px;'></div>", unsafe_allow_html=True)
 
-            pad_l, img_col, pad_r = st.columns([0.08, 0.84, 0.08])
+            # 正式評分頁：影像維持 1.5 倍，但往左放，右側保留較多空隙，
+            # 避免使用者放大網頁時碰到右側評分題目。
+            pad_l, img_col, pad_r = st.columns([0.00, 0.72, 0.28])
             with img_col:
-                # 正式評分頁影像放大 1.5 倍，並與上方文字保留距離，避免卡到標籤與尺寸文字
                 st.markdown("<div style='height: 0.55rem;'></div>", unsafe_allow_html=True)
                 show_image_original(img, caption=image_id, scale=1.5)
 
