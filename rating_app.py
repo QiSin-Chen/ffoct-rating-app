@@ -767,9 +767,9 @@ def main():
             st.caption(f"原始尺寸：{img.width} × {img.height}")
             st.markdown("<div style='height: 2px;'></div>", unsafe_allow_html=True)
 
-            # 正式評分頁：影像維持 1.5 倍，但往左放，右側保留較多空隙，
+            # 正式評分頁：影像維持 1.5 倍，但往左放，右側保留較多空隙（Streamlit 欄寬不可為 0），
             # 避免使用者放大網頁時碰到右側評分題目。
-            pad_l, img_col, pad_r = st.columns([0.00, 0.72, 0.28])
+            pad_l, img_col, pad_r = st.columns([0.01, 0.71, 0.28])
             with img_col:
                 st.markdown("<div style='height: 0.55rem;'></div>", unsafe_allow_html=True)
                 show_image_original(img, caption=image_id, scale=1.5)
