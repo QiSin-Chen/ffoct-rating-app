@@ -568,7 +568,12 @@ def get_example_groups():
     return groups
 
 
-def render_example_items(items, cols_per_row=3):
+def render_example_items(items, cols_per_row=3, image_scale=1.0):
+    """
+    第一頁範例影像顯示。
+    image_scale=1.5：用於臉部、手部、SSOCT、偽影範例。
+    image_scale=1.0：用於最下面皮膚層結構參考，維持原圖大小。
+    """
     for start_idx in range(0, len(items), cols_per_row):
         cols = st.columns(cols_per_row)
 
@@ -579,15 +584,19 @@ def render_example_items(items, cols_per_row=3):
                     unsafe_allow_html=True
                 )
 
+                # 標籤與影像之間多留一點距離，避免放大後卡到文字
+                st.markdown("<div style='height: 0.35rem;'></div>", unsafe_allow_html=True)
+
                 image_path = item["image_path"]
 
                 if image_path is not None and os.path.exists(image_path):
                     img = Image.open(image_path)
-                    show_image_original(img)
+                    show_image_original(img, scale=image_scale)
                 else:
                     st.warning(f"缺少範例影像：{item['stem']}")
 
-                st.markdown("<div style='height: 0.20rem;'></div>", unsafe_allow_html=True)
+                # 放大影像後，每張圖下方也保留距離，避免和下一區塊文字太近
+                st.markdown("<div style='height: 0.45rem;'></div>", unsafe_allow_html=True)
 
 
 def show_intro_page():
@@ -621,8 +630,14 @@ def show_intro_page():
             f"<div class='example-section-note'>{group['group_note']}</div>",
             unsafe_allow_html=True
         )
-        st.markdown("<div style='height: 0.10rem;'></div>", unsafe_allow_html=True)
-        render_example_items(group["items"], cols_per_row=3)
+        st.markdown("<div style='height: 0.18rem;'></div>", unsafe_allow_html=True)
+
+        # 第一頁除了最下面「FFOCT 皮膚層結構參考」維持原圖大小，
+        # 其他範例影像皆放大 1.5 倍。
+        if group["group_title"] == "FFOCT 皮膚層結構參考":
+            render_example_items(group["items"], cols_per_row=3, image_scale=1.0)
+        else:
+            render_example_items(group["items"], cols_per_row=3, image_scale=1.5)
 
     st.markdown("<div style='height: 0.35rem;'></div>", unsafe_allow_html=True)
 
