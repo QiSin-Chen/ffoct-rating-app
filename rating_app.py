@@ -521,8 +521,17 @@ def inject_css():
 # =========================
 # 圖片顯示工具
 # =========================
-def show_image_original(img, caption=None):
-    st.image(img, caption=caption)
+def show_image_original(img, caption=None, scale=1.0):
+    """
+    顯示影像。
+    scale=1.0：原圖大小。
+    scale=1.5：放大為原圖的 1.5 倍，用於正式評分頁。
+    """
+    if scale is None or scale == 1.0:
+        st.image(img, caption=caption)
+    else:
+        display_width = max(1, int(round(img.width * scale)))
+        st.image(img, caption=caption, width=display_width)
 
 
 def find_image_by_stem(folder, stem):
@@ -743,9 +752,11 @@ def main():
             st.caption(f"原始尺寸：{img.width} × {img.height}")
             st.markdown("<div style='height: 2px;'></div>", unsafe_allow_html=True)
 
-            pad_l, img_col, pad_r = st.columns([0.12, 0.76, 0.12])
+            pad_l, img_col, pad_r = st.columns([0.08, 0.84, 0.08])
             with img_col:
-                show_image_original(img, caption=image_id)
+                # 正式評分頁影像放大 1.5 倍，並與上方文字保留距離，避免卡到標籤與尺寸文字
+                st.markdown("<div style='height: 0.55rem;'></div>", unsafe_allow_html=True)
+                show_image_original(img, caption=image_id, scale=1.5)
 
         else:
             st.error(f"找不到影像：{image_path}")
